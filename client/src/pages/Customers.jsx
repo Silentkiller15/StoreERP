@@ -1,1894 +1,214 @@
-import { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import api from "../api/axios";
 
 export default function Customers() {
-  // ==================================================
-  // CUSTOMERS
-  // ==================================================
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
-  const [customers, setCustomers] =
-    useState([]);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [editId, setEditId] =
-    useState(null);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  // ==================================================
-  // FORM
-  // ==================================================
-
-  const emptyForm = {
-    code: "",
-    name: "",
-    mobile: "",
-    email: "",
-    address: "",
-    gst: "",
-  };
-
-  const [form, setForm] =
-    useState(emptyForm);
-
-  // ==================================================
-  // LOAD CUSTOMERS
-  // ==================================================
-
-  useEffect(() => {
-    loadCustomers();
+  // 1. Declare fetch function BEFORE useEffect using useCallback
+  const loadCustomers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/customers");
+      setCustomers(res.data || []);
+    } catch (err) {
+      console.error("Error loading customers:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadCustomers = async () => {
+  // 2. Trigger effect after function declaration
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
+
+  const resetForm = () => {
+    setName("");
+    setPhone("");
+    setEmail("");
+    setAddress("");
+    setEditingId(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const res =
-        await axios.get(
-          "https://mudhikhana.onrender.com/customers"
-        );
-
-      setCustomers(
-        res.data || []
-      );
+      const payload = { name, phone, email, address };
+      if (editingId) {
+        await api.put(`/customers/${editingId}`, payload);
+      } else {
+        await api.post("/customers", payload);
+      }
+      resetForm();
+      loadCustomers();
     } catch (err) {
-      console.log(
-        "Customer Load Error:",
-        err
-      );
-
-      alert(
-        "Unable to load customers"
-      );
+      console.error("Error saving customer:", err);
     }
   };
 
-  // ==================================================
-  // FORM CHANGE
-  // ==================================================
-
-  const handleChange = (e) => {
-    const {
-      name,
-      value,
-    } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleEdit = (customer) => {
+    setEditingId(customer._id || customer.id);
+    setName(customer.name || "");
+    setPhone(customer.phone || "");
+    setEmail(customer.email || "");
+    setAddress(customer.address || "");
   };
 
-  // ==================================================
-  // CLEAR FORM
-  // ==================================================
-
-  const clearForm = () => {
-    setForm(emptyForm);
-    setEditId(null);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    try {
+      await api.delete(`/customers/${id}`);
+      loadCustomers();
+    } catch (err) {
+      console.error("Error deleting customer:", err);
+    }
   };
-
-  // ==================================================
-  // SAVE / UPDATE CUSTOMER
-  // ==================================================
-
-  const saveCustomer =
-    async () => {
-      if (!form.name.trim()) {
-        alert(
-          "Enter Customer Name"
-        );
-        return;
-      }
-
-      const customer = {
-        ...form,
-
-        code:
-          form.code ||
-          "C" +
-            Date.now()
-              .toString()
-              .slice(-5),
-      };
-
-      try {
-        setSaving(true);
-
-        if (editId) {
-          await axios.put(
-            `https://mudhikhana.onrender.com/customers/${editId}`,
-            customer
-          );
-
-          alert(
-            "Customer Updated"
-          );
-        } else {
-          await axios.post(
-            "https://mudhikhana.onrender.com/customers",
-            customer
-          );
-
-          alert(
-            "Customer Saved"
-          );
-        }
-
-        clearForm();
-
-        await loadCustomers();
-      } catch (err) {
-        console.log(
-          "Customer Save Error:",
-          err
-        );
-
-        alert(
-          err.response?.data?.message ||
-            "Error saving customer"
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
-
-  // ==================================================
-  // EDIT CUSTOMER
-  // ==================================================
-
-  const editCustomer = (
-    customer
-  ) => {
-    setEditId(
-      customer.id
-    );
-
-    setForm({
-      code:
-        customer.code || "",
-      name:
-        customer.name || "",
-      mobile:
-        customer.mobile || "",
-      email:
-        customer.email || "",
-      address:
-        customer.address || "",
-      gst:
-        customer.gst || "",
-    });
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  // ==================================================
-  // DELETE CUSTOMER
-  // ==================================================
-
-  const deleteCustomer =
-    async (id) => {
-      if (
-        !window.confirm(
-          "Delete this customer?"
-        )
-      ) {
-        return;
-      }
-
-      try {
-        await axios.delete(
-          `https://mudhikhana.onrender.com/customers/${id}`
-        );
-
-        alert(
-          "Customer Deleted"
-        );
-
-        await loadCustomers();
-
-        if (
-          editId === id
-        ) {
-          clearForm();
-        }
-      } catch (err) {
-        console.log(
-          "Delete Customer Error:",
-          err
-        );
-
-        alert(
-          err.response?.data?.message ||
-            "Delete failed"
-        );
-      }
-    };
-
-  // ==================================================
-  // SEARCH
-  // ==================================================
-
-  const filteredCustomers =
-    useMemo(() => {
-      const keyword =
-        search
-          .trim()
-          .toLowerCase();
-
-      if (!keyword) {
-        return customers;
-      }
-
-      return customers.filter(
-        (customer) =>
-          `${customer.code || ""} ${
-            customer.name || ""
-          } ${
-            customer.mobile || ""
-          } ${
-            customer.email || ""
-          } ${
-            customer.address || ""
-          } ${
-            customer.gst || ""
-          }`
-            .toLowerCase()
-            .includes(keyword)
-      );
-    }, [
-      customers,
-      search,
-    ]);
-
-  // ==================================================
-  // SUMMARY
-  // ==================================================
-
-  const totalCustomers =
-    customers.length;
-
-  const customersWithMobile =
-    customers.filter(
-      (customer) =>
-        String(
-          customer.mobile || ""
-        ).trim() !== ""
-    ).length;
-
-  const customersWithGST =
-    customers.filter(
-      (customer) =>
-        String(
-          customer.gst || ""
-        ).trim() !== ""
-    ).length;
-
-  const customersWithEmail =
-    customers.filter(
-      (customer) =>
-        String(
-          customer.email || ""
-        ).trim() !== ""
-    ).length;
-
-  // ==================================================
-  // STYLES
-  // ==================================================
-
-  const cardStyle = {
-    background: "#ffffff",
-    border:
-      "1px solid #e2e8f0",
-    borderRadius: "12px",
-    boxShadow:
-      "0 2px 8px rgba(15, 23, 42, 0.06)",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding:
-      "10px 12px",
-    border:
-      "1px solid #cbd5e1",
-    borderRadius: "8px",
-    outline: "none",
-    boxSizing:
-      "border-box",
-    fontSize: "14px",
-    background:
-      "#ffffff",
-  };
-
-  const labelStyle = {
-    display: "block",
-    fontSize: "11px",
-    color: "#64748b",
-    fontWeight: "800",
-    textTransform:
-      "uppercase",
-    marginBottom: "6px",
-    letterSpacing:
-      "0.04em",
-  };
-
-  // ==================================================
-  // UI
-  // ==================================================
 
   return (
-    <div
-      style={{
-        minHeight:
-          "100vh",
-        padding:
-          "24px",
-        background:
-          "#f1f5f9",
-        boxSizing:
-          "border-box",
-      }}
-    >
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">Customer Management</h1>
 
-      {/* ==================================================
-          PAGE HEADER
-      ================================================== */}
-
-      <div
-        style={{
-          ...cardStyle,
-          padding:
-            "20px 24px",
-          marginBottom:
-            "18px",
-          display:
-            "flex",
-          justifyContent:
-            "space-between",
-          alignItems:
-            "center",
-          gap:
-            "20px",
-          flexWrap:
-            "wrap",
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize:
-                "12px",
-              color:
-                "#64748b",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              letterSpacing:
-                "0.08em",
-              marginBottom:
-                "5px",
-            }}
-          >
-            Masters
-          </div>
-
-          <h1
-            style={{
-              margin: 0,
-              fontSize:
-                "26px",
-              color:
-                "#0f172a",
-            }}
-          >
-            👥 Customer Master
-          </h1>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              color:
-                "#64748b",
-              fontSize:
-                "13px",
-            }}
-          >
-            Manage customer
-            details, contact
-            information and GST
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={
-            clearForm
-          }
-          style={{
-            padding:
-              "11px 18px",
-            background:
-              "#2563eb",
-            color:
-              "white",
-            border:
-              "none",
-            borderRadius:
-              "8px",
-            cursor:
-              "pointer",
-            fontWeight:
-              "800",
-          }}
-        >
-          ＋ New Customer
-        </button>
-      </div>
-
-      {/* ==================================================
-          SUMMARY CARDS
-      ================================================== */}
-
-      <div
-        style={{
-          display:
-            "grid",
-          gridTemplateColumns:
-            "repeat(4, 1fr)",
-          gap:
-            "14px",
-          marginBottom:
-            "18px",
-        }}
-      >
-
-        {/* TOTAL CUSTOMERS */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#64748b",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            Total Customers
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#0f172a",
-            }}
-          >
-            {totalCustomers}
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#94a3b8",
-            }}
-          >
-            Customers in master
-          </div>
-        </div>
-
-        {/* MOBILE */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-            background:
-              "#eff6ff",
-            border:
-              "1px solid #bfdbfe",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#1d4ed8",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            Mobile Available
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#1d4ed8",
-            }}
-          >
-            {customersWithMobile}
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#3b82f6",
-            }}
-          >
-            Contact numbers
-          </div>
-        </div>
-
-        {/* EMAIL */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-            background:
-              "#f0fdf4",
-            border:
-              "1px solid #bbf7d0",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#15803d",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            Email Available
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#15803d",
-            }}
-          >
-            {customersWithEmail}
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#16a34a",
-            }}
-          >
-            Email addresses
-          </div>
-        </div>
-
-        {/* GST */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-            background:
-              "#faf5ff",
-            border:
-              "1px solid #e9d5ff",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#7e22ce",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            GST Available
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#7e22ce",
-            }}
-          >
-            {customersWithGST}
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#9333ea",
-            }}
-          >
-            GST registrations
-          </div>
-        </div>
-      </div>
-
-      {/* ==================================================
-          CUSTOMER FORM
-      ================================================== */}
-
-      <div
-        style={{
-          ...cardStyle,
-          marginBottom:
-            "18px",
-          overflow:
-            "hidden",
-        }}
-      >
-
-        {/* FORM HEADER */}
-
-        <div
-          style={{
-            padding:
-              "17px 20px",
-            borderBottom:
-              "1px solid #e2e8f0",
-            display:
-              "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            gap:
-              "15px",
-            flexWrap:
-              "wrap",
-          }}
-        >
-          <div
-            style={{
-              display:
-                "flex",
-              alignItems:
-                "center",
-              gap:
-                "10px",
-            }}
-          >
-            <div
-              style={{
-                width:
-                  "36px",
-                height:
-                  "36px",
-                borderRadius:
-                  "9px",
-                background:
-                  editId
-                    ? "#fef3c7"
-                    : "#dbeafe",
-                display:
-                  "flex",
-                alignItems:
-                  "center",
-                justifyContent:
-                  "center",
-                fontSize:
-                  "18px",
-              }}
-            >
-              {editId
-                ? "✏️"
-                : "👤"}
-            </div>
-
-            <div>
-              <div
-                style={{
-                  fontWeight:
-                    "800",
-                  color:
-                    "#0f172a",
-                }}
-              >
-                {editId
-                  ? "Edit Customer"
-                  : "Add Customer"}
-              </div>
-
-              <div
-                style={{
-                  fontSize:
-                    "12px",
-                  color:
-                    "#64748b",
-                }}
-              >
-                {editId
-                  ? "Update customer details"
-                  : "Create a new customer"}
-              </div>
-            </div>
-          </div>
-
-          {editId && (
-            <div
-              style={{
-                display:
-                  "flex",
-                alignItems:
-                  "center",
-                gap:
-                  "10px",
-              }}
-            >
-              <span
-                style={{
-                  padding:
-                    "5px 9px",
-                  borderRadius:
-                    "6px",
-                  background:
-                    "#fef3c7",
-                  color:
-                    "#92400e",
-                  fontSize:
-                    "11px",
-                  fontWeight:
-                    "800",
-                }}
-              >
-                EDITING
-              </span>
-
-              <button
-                type="button"
-                onClick={
-                  clearForm
-                }
-                style={{
-                  border:
-                    "none",
-                  background:
-                    "transparent",
-                  color:
-                    "#64748b",
-                  cursor:
-                    "pointer",
-                  fontWeight:
-                    "700",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* FORM BODY */}
-
-        <div
-          style={{
-            padding:
-              "20px",
-          }}
-        >
-
-          {/* ROW 1 */}
-
-          <div
-            style={{
-              display:
-                "grid",
-              gridTemplateColumns:
-                "1fr 2fr 1.3fr 1fr",
-              gap:
-                "14px",
-              marginBottom:
-                "14px",
-            }}
-          >
-
-            {/* CODE */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Customer Code
-              </label>
-
-              <input
-                name="code"
-                value={
-                  form.code
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Auto generated"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* NAME */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Customer Name *
-              </label>
-
-              <input
-                name="name"
-                value={
-                  form.name
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Enter customer name"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* MOBILE */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Mobile
-              </label>
-
-              <input
-                name="mobile"
-                value={
-                  form.mobile
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Mobile number"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* GST */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                GST Number
-              </label>
-
-              <input
-                name="gst"
-                value={
-                  form.gst
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="GSTIN"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-          </div>
-
-          {/* ROW 2 */}
-
-          <div
-            style={{
-              display:
-                "grid",
-              gridTemplateColumns:
-                "1fr 2fr",
-              gap:
-                "14px",
-            }}
-          >
-
-            {/* EMAIL */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Email
-              </label>
-
-              <input
-                type="email"
-                name="email"
-                value={
-                  form.email
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="customer@example.com"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* ADDRESS */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Address
-              </label>
-
-              <textarea
-                name="address"
-                value={
-                  form.address
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Customer address"
-                rows="3"
-                style={{
-                  ...inputStyle,
-                  resize:
-                    "vertical",
-                  fontFamily:
-                    "inherit",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* FORM FOOTER */}
-
-        <div
-          style={{
-            padding:
-              "14px 20px",
-            borderTop:
-              "1px solid #e2e8f0",
-            background:
-              "#fafafa",
-            display:
-              "flex",
-            justifyContent:
-              "flex-end",
-            gap:
-              "10px",
-          }}
-        >
-          <button
-            type="button"
-            onClick={
-              clearForm
-            }
-            disabled={
-              saving
-            }
-            style={{
-              padding:
-                "10px 18px",
-              border:
-                "1px solid #cbd5e1",
-              borderRadius:
-                "8px",
-              background:
-                "#ffffff",
-              color:
-                "#475569",
-              cursor:
-                saving
-                  ? "not-allowed"
-                  : "pointer",
-              fontWeight:
-                "700",
-            }}
-          >
-            Clear
-          </button>
-
-          <button
-            type="button"
-            onClick={
-              saveCustomer
-            }
-            disabled={
-              saving
-            }
-            style={{
-              padding:
-                "10px 20px",
-              border:
-                "none",
-              borderRadius:
-                "8px",
-              background:
-                saving
-                  ? "#94a3b8"
-                  : editId
-                  ? "#d97706"
-                  : "#2563eb",
-              color:
-                "white",
-              cursor:
-                saving
-                  ? "not-allowed"
-                  : "pointer",
-              fontWeight:
-                "800",
-            }}
-          >
-            {saving
-              ? "Saving..."
-              : editId
-              ? "✓ Update Customer"
-              : "✓ Save Customer"}
-          </button>
-        </div>
-      </div>
-
-      {/* ==================================================
-          CUSTOMER REGISTER
-      ================================================== */}
-
-      <div
-        style={{
-          ...cardStyle,
-          overflow:
-            "hidden",
-        }}
-      >
-
-        {/* REGISTER HEADER */}
-
-        <div
-          style={{
-            padding:
-              "17px 20px",
-            borderBottom:
-              "1px solid #e2e8f0",
-            display:
-              "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            gap:
-              "15px",
-            flexWrap:
-              "wrap",
-          }}
-        >
+      {/* Form Section */}
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
+        <h2 className="text-lg font-semibold text-gray-700">
+          {editingId ? "Edit Customer" : "Add New Customer"}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div
-              style={{
-                fontWeight:
-                  "800",
-                color:
-                  "#0f172a",
-              }}
-            >
-              Customer Register
-            </div>
-
-            <div
-              style={{
-                marginTop:
-                  "3px",
-                fontSize:
-                  "12px",
-                color:
-                  "#64748b",
-              }}
-            >
-              {
-                filteredCustomers.length
-              }{" "}
-              customer
-              {filteredCustomers.length ===
-              1
-                ? ""
-                : "s"} displayed
-            </div>
-          </div>
-
-          {/* SEARCH */}
-
-          <div
-            style={{
-              position:
-                "relative",
-              width:
-                "380px",
-              maxWidth:
-                "100%",
-            }}
-          >
-            <span
-              style={{
-                position:
-                  "absolute",
-                left:
-                  "12px",
-                top:
-                  "10px",
-                fontSize:
-                  "16px",
-              }}
-            >
-              🔍
-            </span>
-
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
             <input
-              value={
-                search
-              }
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              placeholder="Search code, name, mobile, email..."
-              style={{
-                ...inputStyle,
-                padding:
-                  "10px 12px 10px 38px",
-              }}
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Customer Name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Phone Number"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Email Address"
             />
           </div>
         </div>
-
-        {/* TABLE */}
-
-        <div
-          style={{
-            overflowX:
-              "auto",
-          }}
-        >
-          <table
-            style={{
-              width:
-                "100%",
-              minWidth:
-                "1100px",
-              borderCollapse:
-                "collapse",
-            }}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <textarea
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            rows={2}
+            className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Customer Address"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
           >
-            <thead>
-              <tr
-                style={{
-                  background:
-                    "#f8fafc",
-                }}
-              >
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  #
-                </th>
+            {editingId ? "Update Customer" : "Save Customer"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
 
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  CODE
+      {/* List Section */}
+      {loading ? (
+        <div className="py-8 text-center text-gray-500">Loading customers...</div>
+      ) : (
+        <div className="overflow-x-auto shadow-sm border rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer Name
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  CUSTOMER
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Phone
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  MOBILE
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  EMAIL
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Address
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  ADDRESS
-                </th>
-
-                <th
-                  style={{
-                    ...thStyle,
-                    textAlign:
-                      "center",
-                  }}
-                >
-                  GST
-                </th>
-
-                <th
-                  style={{
-                    ...thStyle,
-                    textAlign:
-                      "center",
-                  }}
-                >
-                  ACTIONS
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
-
-            <tbody>
-              {filteredCustomers.length ===
-              0 ? (
+            <tbody className="bg-white divide-y divide-gray-200">
+              {customers.length > 0 ? (
+                customers.map((c) => (
+                  <tr key={c._id || c.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {c.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {c.phone || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {c.email || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {c.address || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(c)}
+                        className="text-blue-600 hover:text-blue-900 font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c._id || c.id)}
+                        className="text-red-600 hover:text-red-900 font-medium"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td
-                    colSpan="8"
-                    style={{
-                      padding:
-                        "55px 20px",
-                      textAlign:
-                        "center",
-                      color:
-                        "#64748b",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize:
-                          "42px",
-                        marginBottom:
-                          "10px",
-                      }}
-                    >
-                      👥
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize:
-                          "16px",
-                        fontWeight:
-                          "800",
-                        color:
-                          "#334155",
-                      }}
-                    >
-                      {search
-                        ? "No matching customers found"
-                        : "No Customers Found"}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop:
-                          "5px",
-                        fontSize:
-                          "13px",
-                      }}
-                    >
-                      {search
-                        ? "Try a different search term."
-                        : "Create your first customer above."}
-                    </div>
+                  <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
+                    No customers found.
                   </td>
                 </tr>
-              ) : (
-                filteredCustomers.map(
-                  (
-                    customer,
-                    index
-                  ) => (
-                    <tr
-                      key={
-                        customer.id
-                      }
-                      style={{
-                        background:
-                          editId ===
-                          customer.id
-                            ? "#fffbeb"
-                            : index %
-                                  2 ===
-                                0
-                            ? "#ffffff"
-                            : "#fafafa",
-                      }}
-                    >
-
-                      {/* NUMBER */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        <span
-                          style={{
-                            color:
-                              "#94a3b8",
-                            fontWeight:
-                              "700",
-                          }}
-                        >
-                          {index + 1}
-                        </span>
-                      </td>
-
-                      {/* CODE */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        <span
-                          style={{
-                            color:
-                              "#2563eb",
-                            fontWeight:
-                              "800",
-                          }}
-                        >
-                          {customer.code ||
-                            "—"}
-                        </span>
-                      </td>
-
-                      {/* CUSTOMER */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        <div
-                          style={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "center",
-                            gap:
-                              "9px",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width:
-                                "34px",
-                              height:
-                                "34px",
-                              borderRadius:
-                                "50%",
-                              background:
-                                "#dbeafe",
-                              color:
-                                "#1d4ed8",
-                              display:
-                                "flex",
-                              alignItems:
-                                "center",
-                              justifyContent:
-                                "center",
-                              fontWeight:
-                                "900",
-                              flexShrink:
-                                0,
-                            }}
-                          >
-                            {String(
-                              customer.name ||
-                                "?"
-                            )
-                              .charAt(
-                                0
-                              )
-                              .toUpperCase()}
-                          </div>
-
-                          <div>
-                            <div
-                              style={{
-                                fontWeight:
-                                  "800",
-                                color:
-                                  "#0f172a",
-                              }}
-                            >
-                              {
-                                customer.name
-                              }
-                            </div>
-
-                            {editId ===
-                              customer.id && (
-                              <span
-                                style={{
-                                  display:
-                                    "inline-block",
-                                  marginTop:
-                                    "3px",
-                                  fontSize:
-                                    "9px",
-                                  padding:
-                                    "3px 6px",
-                                  borderRadius:
-                                    "4px",
-                                  background:
-                                    "#fef3c7",
-                                  color:
-                                    "#92400e",
-                                  fontWeight:
-                                    "800",
-                                }}
-                              >
-                                EDITING
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* MOBILE */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        {customer.mobile ? (
-                          <span
-                            style={{
-                              color:
-                                "#334155",
-                            }}
-                          >
-                            📞{" "}
-                            {
-                              customer.mobile
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* EMAIL */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          maxWidth:
-                            "220px",
-                        }}
-                      >
-                        {customer.email ? (
-                          <span
-                            style={{
-                              color:
-                                "#475569",
-                            }}
-                          >
-                            {
-                              customer.email
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* ADDRESS */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          maxWidth:
-                            "240px",
-                          whiteSpace:
-                            "normal",
-                        }}
-                      >
-                        {customer.address ? (
-                          <span
-                            style={{
-                              color:
-                                "#475569",
-                            }}
-                          >
-                            {
-                              customer.address
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* GST */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          textAlign:
-                            "center",
-                        }}
-                      >
-                        {customer.gst ? (
-                          <span
-                            style={{
-                              display:
-                                "inline-block",
-                              padding:
-                                "5px 8px",
-                              borderRadius:
-                                "5px",
-                              background:
-                                "#faf5ff",
-                              color:
-                                "#7e22ce",
-                              fontSize:
-                                "11px",
-                              fontWeight:
-                                "800",
-                            }}
-                          >
-                            {
-                              customer.gst
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* ACTIONS */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          textAlign:
-                            "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display:
-                              "flex",
-                            justifyContent:
-                              "center",
-                            gap:
-                              "7px",
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() =>
-                              editCustomer(
-                                customer
-                              )
-                            }
-                            style={{
-                              padding:
-                                "7px 10px",
-                              border:
-                                "1px solid #bfdbfe",
-                              borderRadius:
-                                "6px",
-                              background:
-                                "#eff6ff",
-                              color:
-                                "#2563eb",
-                              cursor:
-                                "pointer",
-                              fontWeight:
-                                "800",
-                              fontSize:
-                                "12px",
-                            }}
-                          >
-                            ✏️ Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              deleteCustomer(
-                                customer.id
-                              )
-                            }
-                            style={{
-                              padding:
-                                "7px 10px",
-                              border:
-                                "1px solid #fecaca",
-                              borderRadius:
-                                "6px",
-                              background:
-                                "#fef2f2",
-                              color:
-                                "#dc2626",
-                              cursor:
-                                "pointer",
-                              fontWeight:
-                                "800",
-                              fontSize:
-                                "12px",
-                            }}
-                          >
-                            🗑 Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                )
               )}
             </tbody>
           </table>
         </div>
-
-        {/* REGISTER FOOTER */}
-
-        <div
-          style={{
-            padding:
-              "12px 20px",
-            borderTop:
-              "1px solid #e2e8f0",
-            background:
-              "#fafafa",
-            display:
-              "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            gap:
-              "10px",
-            flexWrap:
-              "wrap",
-            color:
-              "#64748b",
-            fontSize:
-              "12px",
-          }}
-        >
-          <span>
-            Showing{" "}
-            <b
-              style={{
-                color:
-                  "#334155",
-              }}
-            >
-              {
-                filteredCustomers.length
-              }
-            </b>{" "}
-            of{" "}
-            <b
-              style={{
-                color:
-                  "#334155",
-              }}
-            >
-              {customers.length}
-            </b>{" "}
-            customers
-          </span>
-
-          {search && (
-            <button
-              type="button"
-              onClick={() =>
-                setSearch("")
-              }
-              style={{
-                border:
-                  "none",
-                background:
-                  "transparent",
-                color:
-                  "#2563eb",
-                cursor:
-                  "pointer",
-                fontWeight:
-                  "700",
-              }}
-            >
-              Clear Search
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
-
-// ==================================================
-// TABLE STYLES
-// ==================================================
-
-const thStyle = {
-  padding:
-    "13px 12px",
-  textAlign:
-    "left",
-  borderBottom:
-    "1px solid #e2e8f0",
-  color:
-    "#64748b",
-  fontSize:
-    "11px",
-  fontWeight:
-    "800",
-  whiteSpace:
-    "nowrap",
-};
-
-const tdStyle = {
-  padding:
-    "13px 12px",
-  borderBottom:
-    "1px solid #f1f5f9",
-  fontSize:
-    "13px",
-  color:
-    "#475569",
-  whiteSpace:
-    "nowrap",
-};

@@ -1,1890 +1,214 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 export default function Suppliers() {
-  // ==================================================
-  // SUPPLIERS
-  // ==================================================
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
-  const [suppliers, setSuppliers] =
-    useState([]);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [editId, setEditId] =
-    useState(null);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  // ==================================================
-  // FORM
-  // ==================================================
-
-  const emptyForm = {
-    code: "",
-    name: "",
-    mobile: "",
-    email: "",
-    address: "",
-    gst: "",
-  };
-
-  const [form, setForm] =
-    useState(emptyForm);
-
-  // ==================================================
-  // LOAD SUPPLIERS
-  // ==================================================
-
-  useEffect(() => {
-    loadSuppliers();
+  // 1. Declare fetch function BEFORE useEffect using useCallback
+  const loadSuppliers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("https://mudhikhana.onrender.com/suppliers");
+      setSuppliers(res.data || []);
+    } catch (err) {
+      console.error("Error loading suppliers:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadSuppliers = async () => {
+  // 2. Trigger effect after function declaration
+  useEffect(() => {
+    loadSuppliers();
+  }, [loadSuppliers]);
+
+  const resetForm = () => {
+    setName("");
+    setPhone("");
+    setEmail("");
+    setAddress("");
+    setEditingId(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const res =
-        await axios.get(
-          "https://mudhikhana.onrender.com/suppliers"
-        );
-
-      setSuppliers(
-        res.data || []
-      );
+      const payload = { name, phone, email, address };
+      if (editingId) {
+        await axios.put(`https://mudhikhana.onrender.com/suppliers/${editingId}`, payload);
+      } else {
+        await axios.post("https://mudhikhana.onrender.com/suppliers", payload);
+      }
+      resetForm();
+      loadSuppliers();
     } catch (err) {
-      console.log(
-        "Supplier Load Error:",
-        err
-      );
-
-      alert(
-        "Unable to load suppliers."
-      );
+      console.error("Error saving supplier:", err);
     }
   };
 
-  // ==================================================
-  // FORM CHANGE
-  // ==================================================
-
-  const handleChange = (e) => {
-    const {
-      name,
-      value,
-    } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleEdit = (supplier) => {
+    setEditingId(supplier._id || supplier.id);
+    setName(supplier.name || "");
+    setPhone(supplier.phone || "");
+    setEmail(supplier.email || "");
+    setAddress(supplier.address || "");
   };
 
-  // ==================================================
-  // CLEAR FORM
-  // ==================================================
-
-  const clearForm = () => {
-    setForm(emptyForm);
-    setEditId(null);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this supplier?")) return;
+    try {
+      await axios.delete(`https://mudhikhana.onrender.com/suppliers/${id}`);
+      loadSuppliers();
+    } catch (err) {
+      console.error("Error deleting supplier:", err);
+    }
   };
-
-  // ==================================================
-  // SAVE / UPDATE SUPPLIER
-  // ==================================================
-
-  const saveSupplier =
-    async () => {
-      if (!form.name.trim()) {
-        alert(
-          "Enter Supplier Name"
-        );
-        return;
-      }
-
-      const supplier = {
-        ...form,
-
-        code:
-          form.code ||
-          "S" +
-            Date.now()
-              .toString()
-              .slice(-5),
-      };
-
-      try {
-        setSaving(true);
-
-        if (editId) {
-          await axios.put(
-            `https://mudhikhana.onrender.com/suppliers/${editId}`,
-            supplier
-          );
-
-          alert(
-            "Supplier Updated"
-          );
-        } else {
-          await axios.post(
-            "https://mudhikhana.onrender.com/suppliers",
-            supplier
-          );
-
-          alert(
-            "Supplier Saved"
-          );
-        }
-
-        clearForm();
-
-        await loadSuppliers();
-      } catch (err) {
-        console.log(
-          "Supplier Save Error:",
-          err
-        );
-
-        alert(
-          err.response?.data?.message ||
-            "Unable to save supplier."
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
-
-  // ==================================================
-  // EDIT SUPPLIER
-  // ==================================================
-
-  const editSupplier = (
-    supplier
-  ) => {
-    setEditId(
-      supplier.id
-    );
-
-    setForm({
-      code:
-        supplier.code || "",
-      name:
-        supplier.name || "",
-      mobile:
-        supplier.mobile || "",
-      email:
-        supplier.email || "",
-      address:
-        supplier.address || "",
-      gst:
-        supplier.gst || "",
-    });
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  // ==================================================
-  // DELETE SUPPLIER
-  // ==================================================
-
-  const deleteSupplier =
-    async (id) => {
-      if (
-        !window.confirm(
-          "Delete this supplier?"
-        )
-      ) {
-        return;
-      }
-
-      try {
-        await axios.delete(
-          `https://mudhikhana.onrender.com/suppliers/${id}`
-        );
-
-        alert(
-          "Supplier Deleted"
-        );
-
-        await loadSuppliers();
-
-        if (
-          editId === id
-        ) {
-          clearForm();
-        }
-      } catch (err) {
-        console.log(
-          "Supplier Delete Error:",
-          err
-        );
-
-        alert(
-          err.response?.data?.message ||
-            "Unable to delete supplier."
-        );
-      }
-    };
-
-  // ==================================================
-  // SEARCH
-  // ==================================================
-
-  const filteredSuppliers =
-    useMemo(() => {
-      const keyword =
-        search
-          .trim()
-          .toLowerCase();
-
-      if (!keyword) {
-        return suppliers;
-      }
-
-      return suppliers.filter(
-        (supplier) =>
-          `${supplier.code || ""} ${
-            supplier.name || ""
-          } ${
-            supplier.mobile || ""
-          } ${
-            supplier.email || ""
-          } ${
-            supplier.address || ""
-          } ${
-            supplier.gst || ""
-          }`
-            .toLowerCase()
-            .includes(keyword)
-      );
-    }, [
-      suppliers,
-      search,
-    ]);
-
-  // ==================================================
-  // SUMMARY
-  // ==================================================
-
-  const totalSuppliers =
-    suppliers.length;
-
-  const suppliersWithMobile =
-    suppliers.filter(
-      (supplier) =>
-        String(
-          supplier.mobile || ""
-        ).trim() !== ""
-    ).length;
-
-  const suppliersWithEmail =
-    suppliers.filter(
-      (supplier) =>
-        String(
-          supplier.email || ""
-        ).trim() !== ""
-    ).length;
-
-  const suppliersWithGST =
-    suppliers.filter(
-      (supplier) =>
-        String(
-          supplier.gst || ""
-        ).trim() !== ""
-    ).length;
-
-  // ==================================================
-  // STYLES
-  // ==================================================
-
-  const cardStyle = {
-    background: "#ffffff",
-    border:
-      "1px solid #e2e8f0",
-    borderRadius: "12px",
-    boxShadow:
-      "0 2px 8px rgba(15, 23, 42, 0.06)",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding:
-      "10px 12px",
-    border:
-      "1px solid #cbd5e1",
-    borderRadius: "8px",
-    outline: "none",
-    boxSizing:
-      "border-box",
-    fontSize: "14px",
-    background:
-      "#ffffff",
-  };
-
-  const labelStyle = {
-    display: "block",
-    fontSize: "11px",
-    color: "#64748b",
-    fontWeight: "800",
-    textTransform:
-      "uppercase",
-    marginBottom: "6px",
-    letterSpacing:
-      "0.04em",
-  };
-
-  // ==================================================
-  // UI
-  // ==================================================
 
   return (
-    <div
-      style={{
-        minHeight:
-          "100vh",
-        padding:
-          "24px",
-        background:
-          "#f1f5f9",
-        boxSizing:
-          "border-box",
-      }}
-    >
-      {/* ==================================================
-          PAGE HEADER
-      ================================================== */}
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">Supplier Management</h1>
 
-      <div
-        style={{
-          ...cardStyle,
-          padding:
-            "20px 24px",
-          marginBottom:
-            "18px",
-          display:
-            "flex",
-          justifyContent:
-            "space-between",
-          alignItems:
-            "center",
-          gap:
-            "20px",
-          flexWrap:
-            "wrap",
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize:
-                "12px",
-              color:
-                "#64748b",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              letterSpacing:
-                "0.08em",
-              marginBottom:
-                "5px",
-            }}
-          >
-            Masters
-          </div>
-
-          <h1
-            style={{
-              margin: 0,
-              fontSize:
-                "26px",
-              color:
-                "#0f172a",
-            }}
-          >
-            🚚 Supplier Master
-          </h1>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              color:
-                "#64748b",
-              fontSize:
-                "13px",
-            }}
-          >
-            Manage supplier
-            details, contact
-            information and GST
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={
-            clearForm
-          }
-          style={{
-            padding:
-              "11px 18px",
-            background:
-              "#2563eb",
-            color:
-              "white",
-            border:
-              "none",
-            borderRadius:
-              "8px",
-            cursor:
-              "pointer",
-            fontWeight:
-              "800",
-          }}
-        >
-          ＋ New Supplier
-        </button>
-      </div>
-
-      {/* ==================================================
-          SUMMARY CARDS
-      ================================================== */}
-
-      <div
-        style={{
-          display:
-            "grid",
-          gridTemplateColumns:
-            "repeat(4, 1fr)",
-          gap:
-            "14px",
-          marginBottom:
-            "18px",
-        }}
-      >
-        {/* TOTAL */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#64748b",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            Total Suppliers
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#0f172a",
-            }}
-          >
-            {totalSuppliers}
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#94a3b8",
-            }}
-          >
-            Suppliers in master
-          </div>
-        </div>
-
-        {/* MOBILE */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-            background:
-              "#eff6ff",
-            border:
-              "1px solid #bfdbfe",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#1d4ed8",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            Mobile Available
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#1d4ed8",
-            }}
-          >
-            {
-              suppliersWithMobile
-            }
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#3b82f6",
-            }}
-          >
-            Contact numbers
-          </div>
-        </div>
-
-        {/* EMAIL */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-            background:
-              "#f0fdf4",
-            border:
-              "1px solid #bbf7d0",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#15803d",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            Email Available
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#15803d",
-            }}
-          >
-            {
-              suppliersWithEmail
-            }
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#16a34a",
-            }}
-          >
-            Email addresses
-          </div>
-        </div>
-
-        {/* GST */}
-
-        <div
-          style={{
-            ...cardStyle,
-            padding:
-              "18px",
-            background:
-              "#faf5ff",
-            border:
-              "1px solid #e9d5ff",
-          }}
-        >
-          <div
-            style={{
-              fontSize:
-                "11px",
-              color:
-                "#7e22ce",
-              fontWeight:
-                "800",
-              textTransform:
-                "uppercase",
-              marginBottom:
-                "8px",
-            }}
-          >
-            GST Available
-          </div>
-
-          <div
-            style={{
-              fontSize:
-                "25px",
-              fontWeight:
-                "900",
-              color:
-                "#7e22ce",
-            }}
-          >
-            {suppliersWithGST}
-          </div>
-
-          <div
-            style={{
-              marginTop:
-                "5px",
-              fontSize:
-                "12px",
-              color:
-                "#9333ea",
-            }}
-          >
-            GST registrations
-          </div>
-        </div>
-      </div>
-
-      {/* ==================================================
-          SUPPLIER FORM
-      ================================================== */}
-
-      <div
-        style={{
-          ...cardStyle,
-          marginBottom:
-            "18px",
-          overflow:
-            "hidden",
-        }}
-      >
-        {/* FORM HEADER */}
-
-        <div
-          style={{
-            padding:
-              "17px 20px",
-            borderBottom:
-              "1px solid #e2e8f0",
-            display:
-              "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            gap:
-              "15px",
-            flexWrap:
-              "wrap",
-          }}
-        >
-          <div
-            style={{
-              display:
-                "flex",
-              alignItems:
-                "center",
-              gap:
-                "10px",
-            }}
-          >
-            <div
-              style={{
-                width:
-                  "36px",
-                height:
-                  "36px",
-                borderRadius:
-                  "9px",
-                background:
-                  editId
-                    ? "#fef3c7"
-                    : "#dbeafe",
-                display:
-                  "flex",
-                alignItems:
-                  "center",
-                justifyContent:
-                  "center",
-                fontSize:
-                  "18px",
-              }}
-            >
-              {editId
-                ? "✏️"
-                : "🚚"}
-            </div>
-
-            <div>
-              <div
-                style={{
-                  fontWeight:
-                    "800",
-                  color:
-                    "#0f172a",
-                }}
-              >
-                {editId
-                  ? "Edit Supplier"
-                  : "Add Supplier"}
-              </div>
-
-              <div
-                style={{
-                  fontSize:
-                    "12px",
-                  color:
-                    "#64748b",
-                }}
-              >
-                {editId
-                  ? "Update supplier details"
-                  : "Create a new supplier"}
-              </div>
-            </div>
-          </div>
-
-          {editId && (
-            <div
-              style={{
-                display:
-                  "flex",
-                alignItems:
-                  "center",
-                gap:
-                  "10px",
-              }}
-            >
-              <span
-                style={{
-                  padding:
-                    "5px 9px",
-                  borderRadius:
-                    "6px",
-                  background:
-                    "#fef3c7",
-                  color:
-                    "#92400e",
-                  fontSize:
-                    "11px",
-                  fontWeight:
-                    "800",
-                }}
-              >
-                EDITING
-              </span>
-
-              <button
-                type="button"
-                onClick={
-                  clearForm
-                }
-                style={{
-                  border:
-                    "none",
-                  background:
-                    "transparent",
-                  color:
-                    "#64748b",
-                  cursor:
-                    "pointer",
-                  fontWeight:
-                    "700",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* FORM BODY */}
-
-        <div
-          style={{
-            padding:
-              "20px",
-          }}
-        >
-          {/* ROW 1 */}
-
-          <div
-            style={{
-              display:
-                "grid",
-              gridTemplateColumns:
-                "1fr 2fr 1.3fr 1fr",
-              gap:
-                "14px",
-              marginBottom:
-                "14px",
-            }}
-          >
-            {/* CODE */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Supplier Code
-              </label>
-
-              <input
-                name="code"
-                value={
-                  form.code
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Auto generated"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* NAME */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Supplier Name *
-              </label>
-
-              <input
-                name="name"
-                value={
-                  form.name
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Enter supplier name"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* MOBILE */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Mobile
-              </label>
-
-              <input
-                name="mobile"
-                value={
-                  form.mobile
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Mobile number"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* GST */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                GST Number
-              </label>
-
-              <input
-                name="gst"
-                value={
-                  form.gst
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="GSTIN"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-          </div>
-
-          {/* ROW 2 */}
-
-          <div
-            style={{
-              display:
-                "grid",
-              gridTemplateColumns:
-                "1fr 2fr",
-              gap:
-                "14px",
-            }}
-          >
-            {/* EMAIL */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Email
-              </label>
-
-              <input
-                type="email"
-                name="email"
-                value={
-                  form.email
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="supplier@example.com"
-                style={
-                  inputStyle
-                }
-              />
-            </div>
-
-            {/* ADDRESS */}
-
-            <div>
-              <label
-                style={
-                  labelStyle
-                }
-              >
-                Address
-              </label>
-
-              <textarea
-                name="address"
-                value={
-                  form.address
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Supplier address"
-                rows="3"
-                style={{
-                  ...inputStyle,
-                  resize:
-                    "vertical",
-                  fontFamily:
-                    "inherit",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* FORM FOOTER */}
-
-        <div
-          style={{
-            padding:
-              "14px 20px",
-            borderTop:
-              "1px solid #e2e8f0",
-            background:
-              "#fafafa",
-            display:
-              "flex",
-            justifyContent:
-              "flex-end",
-            gap:
-              "10px",
-          }}
-        >
-          <button
-            type="button"
-            onClick={
-              clearForm
-            }
-            disabled={
-              saving
-            }
-            style={{
-              padding:
-                "10px 18px",
-              border:
-                "1px solid #cbd5e1",
-              borderRadius:
-                "8px",
-              background:
-                "#ffffff",
-              color:
-                "#475569",
-              cursor:
-                saving
-                  ? "not-allowed"
-                  : "pointer",
-              fontWeight:
-                "700",
-            }}
-          >
-            Clear
-          </button>
-
-          <button
-            type="button"
-            onClick={
-              saveSupplier
-            }
-            disabled={
-              saving
-            }
-            style={{
-              padding:
-                "10px 20px",
-              border:
-                "none",
-              borderRadius:
-                "8px",
-              background:
-                saving
-                  ? "#94a3b8"
-                  : editId
-                  ? "#d97706"
-                  : "#2563eb",
-              color:
-                "white",
-              cursor:
-                saving
-                  ? "not-allowed"
-                  : "pointer",
-              fontWeight:
-                "800",
-            }}
-          >
-            {saving
-              ? "Saving..."
-              : editId
-              ? "✓ Update Supplier"
-              : "✓ Save Supplier"}
-          </button>
-        </div>
-      </div>
-
-      {/* ==================================================
-          SUPPLIER REGISTER
-      ================================================== */}
-
-      <div
-        style={{
-          ...cardStyle,
-          overflow:
-            "hidden",
-        }}
-      >
-        {/* REGISTER HEADER */}
-
-        <div
-          style={{
-            padding:
-              "17px 20px",
-            borderBottom:
-              "1px solid #e2e8f0",
-            display:
-              "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            gap:
-              "15px",
-            flexWrap:
-              "wrap",
-          }}
-        >
+      {/* Form Section */}
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
+        <h2 className="text-lg font-semibold text-gray-700">
+          {editingId ? "Edit Supplier" : "Add New Supplier"}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div
-              style={{
-                fontWeight:
-                  "800",
-                color:
-                  "#0f172a",
-              }}
-            >
-              Supplier Register
-            </div>
-
-            <div
-              style={{
-                marginTop:
-                  "3px",
-                fontSize:
-                  "12px",
-                color:
-                  "#64748b",
-              }}
-            >
-              {
-                filteredSuppliers.length
-              }{" "}
-              supplier
-              {filteredSuppliers.length ===
-              1
-                ? ""
-                : "s"} displayed
-            </div>
-          </div>
-
-          {/* SEARCH */}
-
-          <div
-            style={{
-              position:
-                "relative",
-              width:
-                "380px",
-              maxWidth:
-                "100%",
-            }}
-          >
-            <span
-              style={{
-                position:
-                  "absolute",
-                left:
-                  "12px",
-                top:
-                  "10px",
-                fontSize:
-                  "16px",
-              }}
-            >
-              🔍
-            </span>
-
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
             <input
-              value={
-                search
-              }
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              placeholder="Search code, name, mobile, email..."
-              style={{
-                ...inputStyle,
-                padding:
-                  "10px 12px 10px 38px",
-              }}
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md"
+              placeholder="Supplier Name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md"
+              placeholder="Phone Number"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md"
+              placeholder="Email Address"
             />
           </div>
         </div>
-
-        {/* TABLE */}
-
-        <div
-          style={{
-            overflowX:
-              "auto",
-          }}
-        >
-          <table
-            style={{
-              width:
-                "100%",
-              minWidth:
-                "1100px",
-              borderCollapse:
-                "collapse",
-            }}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <textarea
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            rows={2}
+            className="w-full border border-gray-300 p-2 rounded-md"
+            placeholder="Supplier Address"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
           >
-            <thead>
-              <tr
-                style={{
-                  background:
-                    "#f8fafc",
-                }}
-              >
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  #
-                </th>
+            {editingId ? "Update Supplier" : "Save Supplier"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
 
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  CODE
+      {/* List Section */}
+      {loading ? (
+        <div className="py-8 text-center text-gray-500">Loading suppliers...</div>
+      ) : (
+        <div className="overflow-x-auto shadow-sm border rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Supplier Name
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  SUPPLIER
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Phone
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  MOBILE
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  EMAIL
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Address
                 </th>
-
-                <th
-                  style={
-                    thStyle
-                  }
-                >
-                  ADDRESS
-                </th>
-
-                <th
-                  style={{
-                    ...thStyle,
-                    textAlign:
-                      "center",
-                  }}
-                >
-                  GST
-                </th>
-
-                <th
-                  style={{
-                    ...thStyle,
-                    textAlign:
-                      "center",
-                  }}
-                >
-                  ACTIONS
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
-
-            <tbody>
-              {filteredSuppliers.length ===
-              0 ? (
+            <tbody className="bg-white divide-y divide-gray-200">
+              {suppliers.length > 0 ? (
+                suppliers.map((s) => (
+                  <tr key={s._id || s.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {s.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {s.phone || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {s.email || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {s.address || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(s)}
+                        className="text-blue-600 hover:text-blue-900 font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s._id || s.id)}
+                        className="text-red-600 hover:text-red-900 font-medium"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td
-                    colSpan="8"
-                    style={{
-                      padding:
-                        "55px 20px",
-                      textAlign:
-                        "center",
-                      color:
-                        "#64748b",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize:
-                          "42px",
-                        marginBottom:
-                          "10px",
-                      }}
-                    >
-                      🚚
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize:
-                          "16px",
-                        fontWeight:
-                          "800",
-                        color:
-                          "#334155",
-                      }}
-                    >
-                      {search
-                        ? "No matching suppliers found"
-                        : "No Suppliers Found"}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop:
-                          "5px",
-                        fontSize:
-                          "13px",
-                      }}
-                    >
-                      {search
-                        ? "Try a different search term."
-                        : "Create your first supplier above."}
-                    </div>
+                  <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
+                    No suppliers added yet.
                   </td>
                 </tr>
-              ) : (
-                filteredSuppliers.map(
-                  (
-                    supplier,
-                    index
-                  ) => (
-                    <tr
-                      key={
-                        supplier.id
-                      }
-                      style={{
-                        background:
-                          editId ===
-                          supplier.id
-                            ? "#fffbeb"
-                            : index %
-                                  2 ===
-                                0
-                            ? "#ffffff"
-                            : "#fafafa",
-                      }}
-                    >
-                      {/* NUMBER */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        <span
-                          style={{
-                            color:
-                              "#94a3b8",
-                            fontWeight:
-                              "700",
-                          }}
-                        >
-                          {index + 1}
-                        </span>
-                      </td>
-
-                      {/* CODE */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        <span
-                          style={{
-                            color:
-                              "#2563eb",
-                            fontWeight:
-                              "800",
-                          }}
-                        >
-                          {supplier.code ||
-                            "—"}
-                        </span>
-                      </td>
-
-                      {/* SUPPLIER */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        <div
-                          style={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "center",
-                            gap:
-                              "9px",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width:
-                                "34px",
-                              height:
-                                "34px",
-                              borderRadius:
-                                "50%",
-                              background:
-                                "#dbeafe",
-                              color:
-                                "#1d4ed8",
-                              display:
-                                "flex",
-                              alignItems:
-                                "center",
-                              justifyContent:
-                                "center",
-                              fontWeight:
-                                "900",
-                              flexShrink:
-                                0,
-                            }}
-                          >
-                            {String(
-                              supplier.name ||
-                                "?"
-                            )
-                              .charAt(
-                                0
-                              )
-                              .toUpperCase()}
-                          </div>
-
-                          <div>
-                            <div
-                              style={{
-                                fontWeight:
-                                  "800",
-                                color:
-                                  "#0f172a",
-                              }}
-                            >
-                              {
-                                supplier.name
-                              }
-                            </div>
-
-                            {editId ===
-                              supplier.id && (
-                              <span
-                                style={{
-                                  display:
-                                    "inline-block",
-                                  marginTop:
-                                    "3px",
-                                  fontSize:
-                                    "9px",
-                                  padding:
-                                    "3px 6px",
-                                  borderRadius:
-                                    "4px",
-                                  background:
-                                    "#fef3c7",
-                                  color:
-                                    "#92400e",
-                                  fontWeight:
-                                    "800",
-                                }}
-                              >
-                                EDITING
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* MOBILE */}
-
-                      <td
-                        style={
-                          tdStyle
-                        }
-                      >
-                        {supplier.mobile ? (
-                          <span
-                            style={{
-                              color:
-                                "#334155",
-                            }}
-                          >
-                            📞{" "}
-                            {
-                              supplier.mobile
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* EMAIL */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          maxWidth:
-                            "220px",
-                        }}
-                      >
-                        {supplier.email ? (
-                          <span
-                            style={{
-                              color:
-                                "#475569",
-                            }}
-                          >
-                            {
-                              supplier.email
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* ADDRESS */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          maxWidth:
-                            "240px",
-                          whiteSpace:
-                            "normal",
-                        }}
-                      >
-                        {supplier.address ? (
-                          <span
-                            style={{
-                              color:
-                                "#475569",
-                            }}
-                          >
-                            {
-                              supplier.address
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* GST */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          textAlign:
-                            "center",
-                        }}
-                      >
-                        {supplier.gst ? (
-                          <span
-                            style={{
-                              display:
-                                "inline-block",
-                              padding:
-                                "5px 8px",
-                              borderRadius:
-                                "5px",
-                              background:
-                                "#faf5ff",
-                              color:
-                                "#7e22ce",
-                              fontSize:
-                                "11px",
-                              fontWeight:
-                                "800",
-                            }}
-                          >
-                            {
-                              supplier.gst
-                            }
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              color:
-                                "#94a3b8",
-                            }}
-                          >
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* ACTIONS */}
-
-                      <td
-                        style={{
-                          ...tdStyle,
-                          textAlign:
-                            "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display:
-                              "flex",
-                            justifyContent:
-                              "center",
-                            gap:
-                              "7px",
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() =>
-                              editSupplier(
-                                supplier
-                              )
-                            }
-                            style={{
-                              padding:
-                                "7px 10px",
-                              border:
-                                "1px solid #bfdbfe",
-                              borderRadius:
-                                "6px",
-                              background:
-                                "#eff6ff",
-                              color:
-                                "#2563eb",
-                              cursor:
-                                "pointer",
-                              fontWeight:
-                                "800",
-                              fontSize:
-                                "12px",
-                            }}
-                          >
-                            ✏️ Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              deleteSupplier(
-                                supplier.id
-                              )
-                            }
-                            style={{
-                              padding:
-                                "7px 10px",
-                              border:
-                                "1px solid #fecaca",
-                              borderRadius:
-                                "6px",
-                              background:
-                                "#fef2f2",
-                              color:
-                                "#dc2626",
-                              cursor:
-                                "pointer",
-                              fontWeight:
-                                "800",
-                              fontSize:
-                                "12px",
-                            }}
-                          >
-                            🗑 Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                )
               )}
             </tbody>
           </table>
         </div>
-
-        {/* REGISTER FOOTER */}
-
-        <div
-          style={{
-            padding:
-              "12px 20px",
-            borderTop:
-              "1px solid #e2e8f0",
-            background:
-              "#fafafa",
-            display:
-              "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            gap:
-              "10px",
-            flexWrap:
-              "wrap",
-            color:
-              "#64748b",
-            fontSize:
-              "12px",
-          }}
-        >
-          <span>
-            Showing{" "}
-            <b
-              style={{
-                color:
-                  "#334155",
-              }}
-            >
-              {
-                filteredSuppliers.length
-              }
-            </b>{" "}
-            of{" "}
-            <b
-              style={{
-                color:
-                  "#334155",
-              }}
-            >
-              {suppliers.length}
-            </b>{" "}
-            suppliers
-          </span>
-
-          {search && (
-            <button
-              type="button"
-              onClick={() =>
-                setSearch("")
-              }
-              style={{
-                border:
-                  "none",
-                background:
-                  "transparent",
-                color:
-                  "#2563eb",
-                cursor:
-                  "pointer",
-                fontWeight:
-                  "700",
-              }}
-            >
-              Clear Search
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
-
-// ==================================================
-// TABLE STYLES
-// ==================================================
-
-const thStyle = {
-  padding:
-    "13px 12px",
-  textAlign:
-    "left",
-  borderBottom:
-    "1px solid #e2e8f0",
-  color:
-    "#64748b",
-  fontSize:
-    "11px",
-  fontWeight:
-    "800",
-  whiteSpace:
-    "nowrap",
-};
-
-const tdStyle = {
-  padding:
-    "13px 12px",
-  borderBottom:
-    "1px solid #f1f5f9",
-  fontSize:
-    "13px",
-  color:
-    "#475569",
-  whiteSpace:
-    "nowrap",
-};

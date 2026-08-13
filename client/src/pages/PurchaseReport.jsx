@@ -1,800 +1,304 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
+import api from "../api/axios";
 
 export default function PurchaseReport() {
   const [purchases, setPurchases] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
+  // Filter States
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // ==================================================
-  // LOAD REPORT
-  // ==================================================
+  // Selected purchase for detailed modal/view
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
 
-  useEffect(() => {
-    loadPurchaseReport();
-  }, []);
-
-  const loadPurchaseReport = async () => {
+  // 1. Fetch Purchases cleanly using useCallback
+  const loadPurchases = useCallback(async () => {
     try {
       setLoading(true);
-
-      const res = await axios.get(
-        "https://mudhikhana.onrender.com/purchases/report/all"
-      );
-
+      const res = await api.get("/purchases");
       setPurchases(res.data || []);
     } catch (err) {
-      console.log(
-        "Purchase Report Error:",
-        err
-      );
-
-      alert(
-        "Unable to load Purchase Report"
-      );
+      console.error("Error fetching purchases:", err);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // 2. Trigger fetch on mount
+  useEffect(() => {
+    loadPurchases();
+  }, [loadPurchases]);
+
+  // Handle printing selected purchase modal
+  const handlePrint = () => {
+    window.print();
   };
 
-  // ==================================================
-  // FILTER
-  // ==================================================
-
-  const filteredPurchases =
-    purchases.filter((purchase) => {
-      const text =
-        search.trim().toLowerCase();
-
+  // Filtered purchases list
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter((p) => {
       const matchesSearch =
-        !text ||
-        String(
-          purchase.purchaseNo || ""
-        )
-          .toLowerCase()
-          .includes(text) ||
-        String(
-          purchase.supplierName || ""
-        )
-          .toLowerCase()
-          .includes(text);
+        p.supplierName?.toLowerCase().includes(search.toLowerCase()) ||
+        p.purchaseNo?.toLowerCase().includes(search.toLowerCase()) ||
+        p._id?.toLowerCase().includes(search.toLowerCase());
 
-      const matchesDate =
-        !dateFilter ||
-        String(
-          purchase.purchaseDate || ""
-        ) === dateFilter;
+      const purchaseDate = p.date ? new Date(p.date) : null;
+      let matchesDate = true;
 
-      return (
-        matchesSearch &&
-        matchesDate
-      );
-    });
-
-  // ==================================================
-  // TOTAL
-  // ==================================================
-
-  const totalPurchases =
-    filteredPurchases.reduce(
-      (sum, purchase) =>
-        sum +
-        Number(
-          purchase.grandTotal || 0
-        ),
-      0
-    );
-
-  const money = (value) =>
-    Number(
-      value || 0
-    ).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+      if (startDate && purchaseDate) {
+        matchesDate = matchesDate && purchaseDate >= new Date(startDate);
       }
-    );
+      if (endDate && purchaseDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && purchaseDate <= end;
+      }
 
-  // ==================================================
-  // UI
-  // ==================================================
+      return matchesSearch && matchesDate;
+    });
+  }, [purchases, search, startDate, endDate]);
+
+  // Aggregate stats
+  const totalAmountSum = useMemo(() => {
+    return filteredPurchases.reduce((acc, p) => acc + (Number(p.totalAmount) || 0), 0);
+  }, [filteredPurchases]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f1f5f9",
-        padding: 24,
-        boxSizing: "border-box",
-      }}
-    >
-      {/* ==================================================
-          HEADER
-      ================================================== */}
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 22,
-          gap: 15,
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "#2563eb",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 23,
-            }}
-          >
-            📊
-          </div>
-
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: 26,
-                color: "#0f172a",
-              }}
-            >
-              Purchase Report
-            </h1>
-
-            <p
-              style={{
-                margin: "4px 0 0",
-                color: "#64748b",
-                fontSize: 13,
-              }}
-            >
-              Purchase summary and
-              supplier transaction report
-            </p>
-          </div>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Purchase Report & Register</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Track inward stock entries, supplier purchases, and purchase history.
+          </p>
         </div>
-
         <button
-          onClick={loadPurchaseReport}
-          style={{
-            padding: "10px 16px",
-            background: "white",
-            color: "#334155",
-            border: "1px solid #cbd5e1",
-            borderRadius: 8,
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
+          onClick={loadPurchases}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm px-4 py-2 rounded-md transition-colors border"
         >
           🔄 Refresh
         </button>
       </div>
 
-      {/* ==================================================
-          SUMMARY
-      ================================================== */}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(2, minmax(0, 1fr))",
-          gap: 14,
-          marginBottom: 18,
-        }}
-      >
-        <SummaryCard
-          icon="📄"
-          title="Purchase Transactions"
-          value={
-            filteredPurchases.length
-          }
-          subtitle="Transactions shown"
-        />
-
-        <SummaryCard
-          icon="💰"
-          title="Total Purchases"
-          value={`₹ ${money(
-            totalPurchases
-          )}`}
-          subtitle="Grand purchase value"
-        />
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-5 rounded-lg border shadow-sm">
+          <p className="text-xs font-semibold text-gray-500 uppercase">Total Entries</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{filteredPurchases.length}</p>
+        </div>
+        <div className="bg-white p-5 rounded-lg border shadow-sm">
+          <p className="text-xs font-semibold text-gray-500 uppercase">Total Purchase Value</p>
+          <p className="text-2xl font-bold text-blue-600 mt-1">₹{totalAmountSum.toFixed(2)}</p>
+        </div>
+        <div className="bg-white p-5 rounded-lg border shadow-sm">
+          <p className="text-xs font-semibold text-gray-500 uppercase">Avg Purchase / Entry</p>
+          <p className="text-2xl font-bold text-emerald-600 mt-1">
+            ₹{filteredPurchases.length > 0 ? (totalAmountSum / filteredPurchases.length).toFixed(2) : "0.00"}
+          </p>
+        </div>
       </div>
 
-      {/* ==================================================
-          SEARCH
-      ================================================== */}
-
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 18,
-          boxShadow:
-            "0 2px 6px rgba(15,23,42,0.04)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-        >
-          <div>
-            <h3
-              style={{
-                margin: 0,
-                fontSize: 15,
-                color: "#0f172a",
-              }}
-            >
-              🔎 Search & Filter
-            </h3>
-
-            <p
-              style={{
-                margin: "3px 0 0",
-                fontSize: 11,
-                color: "#64748b",
-              }}
-            >
-              Search by purchase number
-              or supplier
-            </p>
-          </div>
-
-          {(search || dateFilter) && (
-            <button
-              onClick={() => {
-                setSearch("");
-                setDateFilter("");
-              }}
-              style={{
-                border: "none",
-                background: "transparent",
-                color: "#2563eb",
-                cursor: "pointer",
-                fontWeight: 600,
-                fontSize: 12,
-              }}
-            >
-              Clear Filters
-            </button>
-          )}
+      {/* Search & Date Range Filters */}
+      <div className="bg-white p-4 rounded-lg border shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Search Supplier / Bill #</label>
+          <input
+            type="text"
+            placeholder="Search supplier or purchase no..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-gray-300 p-2 rounded-md text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              position: "relative",
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                left: 12,
-                top: "50%",
-                transform:
-                  "translateY(-50%)",
-                color: "#94a3b8",
-              }}
-            >
-              🔎
-            </span>
-
-            <input
-              type="text"
-              placeholder="Search purchase no or supplier..."
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              style={{
-                ...inputStyle,
-                paddingLeft: 38,
-              }}
-            />
-          </div>
-
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
           <input
             type="date"
-            value={dateFilter}
-            onChange={(e) =>
-              setDateFilter(e.target.value)
-            }
-            style={inputStyle}
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="border border-gray-300 p-2 rounded-md text-sm w-full bg-white"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="border border-gray-300 p-2 rounded-md text-sm w-full bg-white"
           />
         </div>
       </div>
 
-      {/* ==================================================
-          REPORT TABLE
-      ================================================== */}
-
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          overflow: "hidden",
-          boxShadow:
-            "0 2px 6px rgba(15,23,42,0.04)",
-        }}
-      >
-        <div
-          style={{
-            padding: "16px 18px",
-            borderBottom:
-              "1px solid #e2e8f0",
-            display: "flex",
-            justifyContent:
-              "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 16,
-                color: "#0f172a",
-              }}
-            >
-              📋 Purchase Transactions
-            </h2>
-
-            <p
-              style={{
-                margin: "4px 0 0",
-                fontSize: 11,
-                color: "#64748b",
-              }}
-            >
-              {filteredPurchases.length}{" "}
-              transaction
-              {filteredPurchases.length ===
-              1
-                ? ""
-                : "s"}{" "}
-              shown
-            </p>
-          </div>
+      {/* Purchase Register Table */}
+      {loading ? (
+        <div className="py-12 text-center text-gray-500">Loading purchase register...</div>
+      ) : (
+        <div className="overflow-x-auto shadow-sm border rounded-lg bg-white">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Bill / Purchase #
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Supplier Name
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  Items Count
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  Total Amount (₹)
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredPurchases.length > 0 ? (
+                filteredPurchases.map((p) => {
+                  const items = p.items || [];
+                  return (
+                    <tr key={p._id || p.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        {p.purchaseNo || p._id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {p.date ? new Date(p.date).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">
+                        {p.supplierName || "General Supplier"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-600">
+                        {items.length}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
+                        ₹{Number(p.totalAmount || 0).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        <button
+                          onClick={() => setSelectedPurchase(p)}
+                          className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium text-xs px-3 py-1.5 rounded transition-colors"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-400">
+                    No purchase records match the selected criteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
+      )}
 
-        {loading ? (
-          <div
-            style={{
-              padding: 50,
-              textAlign: "center",
-              color: "#64748b",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 30,
-                marginBottom: 10,
-              }}
-            >
-              📊
+      {/* Purchase Detail Modal */}
+      {selectedPurchase && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg border max-w-2xl w-full p-6 space-y-6 shadow-xl max-h-[90vh] overflow-y-auto print:max-h-none print:shadow-none print:border-none">
+            {/* Modal Actions (Hidden during print) */}
+            <div className="flex justify-between items-center print:hidden">
+              <h2 className="text-xl font-bold text-gray-800">Purchase Details</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrint}
+                  className="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-xs font-medium"
+                >
+                  🖨️ Print
+                </button>
+                <button
+                  onClick={() => setSelectedPurchase(null)}
+                  className="text-gray-400 hover:text-gray-600 text-lg font-bold px-2"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
-            Loading Purchase Report...
-          </div>
-        ) : (
-          <div
-            style={{
-              overflowX: "auto",
-            }}
-          >
-            <table
-              style={{
-                width: "100%",
-                minWidth: 750,
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    background: "#f8fafc",
-                    borderBottom:
-                      "2px solid #e2e8f0",
-                  }}
-                >
-                  <th style={thStyle}>
-                    #
-                  </th>
+            {/* Modal Sheet Content */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex justify-between items-start text-sm">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Supplier Name</p>
+                  <p className="font-bold text-gray-900 text-base mt-0.5">
+                    {selectedPurchase.supplierName || "General Supplier"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Bill / Purchase No</p>
+                  <p className="font-semibold text-blue-600 mt-0.5">
+                    {selectedPurchase.purchaseNo || selectedPurchase._id}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Date: {selectedPurchase.date ? new Date(selectedPurchase.date).toLocaleDateString() : "—"}
+                  </p>
+                </div>
+              </div>
 
-                  <th style={thStyle}>
-                    Purchase No
-                  </th>
-
-                  <th style={thStyle}>
-                    Date
-                  </th>
-
-                  <th
-                    style={{
-                      ...thStyle,
-                      textAlign: "left",
-                    }}
-                  >
-                    Supplier
-                  </th>
-
-                  <th
-                    style={{
-                      ...thStyle,
-                      textAlign: "right",
-                    }}
-                  >
-                    Grand Total
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredPurchases.length ===
-                0 ? (
-                  <tr>
-                    <td
-                      colSpan="5"
-                      style={{
-                        padding: 55,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 40,
-                          marginBottom: 10,
-                        }}
-                      >
-                        📭
-                      </div>
-
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          color: "#334155",
-                        }}
-                      >
-                        No Purchases Found
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "#94a3b8",
-                          marginTop: 5,
-                        }}
-                      >
-                        Try changing your
-                        search or date filter.
-                      </div>
-                    </td>
+              {/* Items List */}
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="py-2 text-left font-semibold text-gray-600">Item</th>
+                    <th className="py-2 text-right font-semibold text-gray-600">Qty</th>
+                    <th className="py-2 text-right font-semibold text-gray-600">Unit Cost (₹)</th>
+                    <th className="py-2 text-right font-semibold text-gray-600">Total (₹)</th>
                   </tr>
-                ) : (
-                  filteredPurchases.map(
-                    (purchase, index) => (
-                      <tr
-                        key={purchase.id}
-                        style={{
-                          borderBottom:
-                            "1px solid #f1f5f9",
-                        }}
-                      >
-                        <td
-                          style={{
-                            ...tdStyle,
-                            textAlign: "center",
-                            color: "#94a3b8",
-                          }}
-                        >
-                          {index + 1}
-                        </td>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {(selectedPurchase.items || []).map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="py-2.5 font-medium text-gray-800">
+                        {item.productName || item.name}
+                      </td>
+                      <td className="py-2.5 text-right text-gray-700">{item.quantity}</td>
+                      <td className="py-2.5 text-right text-gray-700">
+                        ₹{Number(item.unitCost || item.costPrice || 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 text-right font-semibold text-gray-900">
+                        ₹{Number(item.totalCost || item.quantity * (item.unitCost || item.costPrice) || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-                        <td style={tdStyle}>
-                          <span
-                            style={{
-                              display:
-                                "inline-block",
-                              padding:
-                                "5px 9px",
-                              background:
-                                "#eff6ff",
-                              color:
-                                "#1d4ed8",
-                              borderRadius: 6,
-                              fontWeight: 700,
-                              fontSize: 12,
-                            }}
-                          >
-                            {
-                              purchase.purchaseNo
-                            }
-                          </span>
-                        </td>
+              <div className="border-t pt-3 flex justify-end">
+                <div className="text-right">
+                  <span className="text-sm font-bold text-gray-700">Total Purchase Value: </span>
+                  <span className="text-lg font-extrabold text-blue-600 ml-2">
+                    ₹{Number(selectedPurchase.totalAmount || 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-                        <td style={tdStyle}>
-                          {
-                            purchase.purchaseDate
-                          }
-                        </td>
-
-                        <td
-                          style={{
-                            ...tdStyle,
-                            textAlign: "left",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems:
-                                "center",
-                              gap: 8,
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: 8,
-                                background:
-                                  "#f1f5f9",
-                                display: "flex",
-                                alignItems:
-                                  "center",
-                                justifyContent:
-                                  "center",
-                              }}
-                            >
-                              🏢
-                            </div>
-
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color:
-                                  "#334155",
-                              }}
-                            >
-                              {
-                                purchase.supplierName
-                              }
-                            </span>
-                          </div>
-                        </td>
-
-                        <td
-                          style={{
-                            ...tdStyle,
-                            textAlign: "right",
-                          }}
-                        >
-                          <strong
-                            style={{
-                              fontSize: 14,
-                              color: "#0f172a",
-                            }}
-                          >
-                            ₹{" "}
-                            {money(
-                              purchase.grandTotal
-                            )}
-                          </strong>
-                        </td>
-                      </tr>
-                    )
-                  )
-                )}
-              </tbody>
-
-              {filteredPurchases.length >
-                0 && (
-                <tfoot>
-                  <tr
-                    style={{
-                      background: "#f8fafc",
-                      borderTop:
-                        "2px solid #cbd5e1",
-                    }}
-                  >
-                    <td
-                      colSpan="4"
-                      style={{
-                        padding:
-                          "14px 12px",
-                        textAlign: "right",
-                        fontWeight: 800,
-                        color: "#0f172a",
-                      }}
-                    >
-                      TOTAL PURCHASES
-                    </td>
-
-                    <td
-                      style={{
-                        padding:
-                          "14px 12px",
-                        textAlign: "right",
-                        fontWeight: 800,
-                        color: "#2563eb",
-                        fontSize: 15,
-                      }}
-                    >
-                      ₹{" "}
-                      {money(
-                        totalPurchases
-                      )}
-                    </td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
+            {/* Close Button */}
+            <div className="text-right print:hidden pt-2 border-t">
+              <button
+                onClick={() => setSelectedPurchase(null)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-md text-sm"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* ==================================================
-          RESPONSIVE CSS
-      ================================================== */}
-
-      <style>
-        {`
-          input:focus {
-            outline: none;
-            border-color: #2563eb !important;
-            box-shadow:
-              0 0 0 3px rgba(37,99,235,0.10);
-          }
-
-          button:hover {
-            filter: brightness(0.97);
-          }
-
-          @media (max-width: 700px) {
-            .purchase-report-filter {
-              grid-template-columns: 1fr !important;
-            }
-          }
-        `}
-      </style>
+        </div>
+      )}
     </div>
   );
 }
-
-// ==================================================
-// SUMMARY CARD
-// ==================================================
-
-function SummaryCard({
-  icon,
-  title,
-  value,
-  subtitle,
-}) {
-  return (
-    <div
-      style={{
-        background: "white",
-        border:
-          "1px solid #e2e8f0",
-        borderRadius: 12,
-        padding: 16,
-        boxShadow:
-          "0 2px 6px rgba(15,23,42,0.04)",
-      }}
-    >
-      <div
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 9,
-          background: "#eff6ff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 18,
-        }}
-      >
-        {icon}
-      </div>
-
-      <div
-        style={{
-          marginTop: 12,
-          fontSize: 12,
-          color: "#64748b",
-          fontWeight: 600,
-        }}
-      >
-        {title}
-      </div>
-
-      <div
-        style={{
-          marginTop: 4,
-          fontSize: 20,
-          fontWeight: 800,
-          color: "#0f172a",
-        }}
-      >
-        {value}
-      </div>
-
-      <div
-        style={{
-          marginTop: 4,
-          fontSize: 10,
-          color: "#94a3b8",
-        }}
-      >
-        {subtitle}
-      </div>
-    </div>
-  );
-}
-
-// ==================================================
-// STYLES
-// ==================================================
-
-const inputStyle = {
-  width: "100%",
-  height: 42,
-  boxSizing: "border-box",
-  padding: "0 12px",
-  border:
-    "1px solid #cbd5e1",
-  borderRadius: 8,
-  background: "white",
-  color: "#0f172a",
-  fontSize: 13,
-};
-
-const thStyle = {
-  padding: "12px 10px",
-  textAlign: "center",
-  fontSize: 11,
-  fontWeight: 700,
-  color: "#475569",
-  whiteSpace: "nowrap",
-};
-
-const tdStyle = {
-  padding: "13px 10px",
-  fontSize: 12,
-  color: "#475569",
-  whiteSpace: "nowrap",
-};
