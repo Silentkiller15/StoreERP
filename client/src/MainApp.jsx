@@ -4,10 +4,10 @@ import axios from "axios";
 import MainLayout from "./layouts/MainLayout";
 
 import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products";
+import Products from "./pages/products"; // 👈 Fixed: lowercase 'products'
 import Customers from "./pages/Customers";
 import Suppliers from "./pages/Suppliers";
-import Purchases from "./pages/Purchases";
+import Purchases from "./pages/purchases"; // 👈 Fixed: lowercase 'purchases'
 import Sales from "./pages/Sales";
 import Stock from "./pages/Stock";
 import StockLedger from "./pages/StockLedger";
@@ -16,7 +16,7 @@ import OpeningStock from "./pages/OpeningStock";
 import SalesRegister from "./pages/SalesRegister";
 import PurchaseRegister from "./pages/PurchaseRegister";
 
-import Invoice from "./pages/Invoice";
+import Invoice from "./pages/invoice"; // 👈 Fixed: lowercase 'invoice'
 import SalesReport from "./pages/SalesReport";
 import PurchaseReport from "./pages/PurchaseReport";
 
