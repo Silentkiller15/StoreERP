@@ -12,8 +12,7 @@ export default function BalanceSheet() {
     totalCapital: 0,
   });
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
   // ==================================================
   // LOAD BALANCE SHEET
@@ -33,37 +32,16 @@ export default function BalanceSheet() {
 
       setReport({
         assets: res.data.assets || [],
-
-        liabilities:
-          res.data.liabilities || [],
-
-        capital:
-          res.data.capital || [],
-
-        totalAssets:
-          Number(
-            res.data.totalAssets
-          ) || 0,
-
-        totalLiabilities:
-          Number(
-            res.data.totalLiabilities
-          ) || 0,
-
-        totalCapital:
-          Number(
-            res.data.totalCapital
-          ) || 0,
+        liabilities: res.data.liabilities || [],
+        capital: res.data.capital || [],
+        totalAssets: Number(res.data.totalAssets) || 0,
+        totalLiabilities: Number(res.data.totalLiabilities) || 0,
+        totalCapital: Number(res.data.totalCapital) || 0,
       });
     } catch (err) {
-      console.log(
-        "Balance Sheet Error:",
-        err
-      );
-
+      console.error("Balance Sheet Error:", err);
       alert(
-        err.response?.data?.message ||
-          "Unable to load Balance Sheet"
+        err.response?.data?.message || "Unable to load Balance Sheet"
       );
     } finally {
       setLoading(false);
@@ -71,17 +49,14 @@ export default function BalanceSheet() {
   };
 
   // ==================================================
-  // MONEY
+  // MONEY FORMATTER
   // ==================================================
 
   const money = (value) =>
-    Number(value || 0).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
+    Number(value || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   // ==================================================
   // BALANCE CHECK
@@ -89,117 +64,63 @@ export default function BalanceSheet() {
 
   const balanceDifference =
     report.totalAssets -
-    (
-      report.totalLiabilities +
-      report.totalCapital
-    );
+    (report.totalLiabilities + report.totalCapital);
 
-  const isBalanced =
-    Math.abs(balanceDifference) <
-    0.01;
+  const isBalanced = Math.abs(balanceDifference) < 0.01;
 
   return (
     <>
       {/* ==================================================
           PRINT CSS
       ================================================== */}
-
       <style>
         {`
           @media print {
-
             @page {
               size: A4 portrait;
               margin: 10mm;
             }
 
             html,
-            body {
+            body,
+            #root {
               width: 100% !important;
               height: auto !important;
-
               margin: 0 !important;
               padding: 0 !important;
-
               background: white !important;
-
               transform: none !important;
               rotate: none !important;
-
               overflow: visible !important;
-
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
 
-            #root {
-              width: 100% !important;
-              height: auto !important;
-
-              margin: 0 !important;
-              padding: 0 !important;
-
-              background: white !important;
-
-              transform: none !important;
-              rotate: none !important;
-
-              overflow: visible !important;
-            }
-
-            /* ==========================================
-               HIDE SIDEBAR / NAVIGATION
-            ========================================== */
-
             .sidebar,
             aside,
-            nav {
-              display: none !important;
-            }
-
-            /* ==========================================
-               HIDE BUTTONS / SCREEN CONTROLS
-            ========================================== */
-
+            nav,
             button,
             .no-print {
               display: none !important;
             }
 
-            /* ==========================================
-               MAIN PRINT AREA
-            ========================================== */
-
             .balance-sheet-print-area {
               display: block !important;
-
               width: 100% !important;
               max-width: 100% !important;
-
               margin: 0 !important;
               padding: 0 !important;
-
               min-height: 0 !important;
-
               box-sizing: border-box !important;
-
               background: white !important;
-
               transform: none !important;
               rotate: none !important;
             }
 
-            /* ==========================================
-               COMPANY HEADER
-            ========================================== */
-
             .company-header {
               width: 100% !important;
-
               margin-bottom: 8px !important;
-
               padding-bottom: 8px !important;
-
               break-inside: avoid !important;
               page-break-inside: avoid !important;
             }
@@ -213,35 +134,19 @@ export default function BalanceSheet() {
               max-height: 55px !important;
             }
 
-            /* ==========================================
-               REPORT HEADER
-            ========================================== */
-
             .balance-sheet-header {
               width: 100% !important;
-
               margin-bottom: 10px !important;
-
               break-inside: avoid !important;
               page-break-inside: avoid !important;
             }
 
-            /* ==========================================
-               SUMMARY CARDS
-            ========================================== */
-
             .balance-summary {
               display: grid !important;
-
-              grid-template-columns:
-                repeat(3, 1fr) !important;
-
+              grid-template-columns: repeat(3, 1fr) !important;
               gap: 7px !important;
-
               width: 100% !important;
-
               margin-bottom: 10px !important;
-
               break-inside: avoid !important;
               page-break-inside: avoid !important;
             }
@@ -254,69 +159,31 @@ export default function BalanceSheet() {
               font-size: 14px !important;
             }
 
-            /* ==========================================
-               MAIN COLUMNS
-            ========================================== */
-
             .balance-columns {
               display: grid !important;
-
-              grid-template-columns:
-                repeat(2, minmax(0, 1fr)) !important;
-
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
               gap: 10px !important;
-
               width: 100% !important;
-
               margin-bottom: 10px !important;
             }
 
-            /* ==========================================
-               CARDS
-            ========================================== */
-
             .balance-card {
               box-shadow: none !important;
-
               overflow: visible !important;
-
               break-inside: auto !important;
-
               page-break-inside: auto !important;
             }
 
-            /* ==========================================
-               ACCOUNT ROWS
-            ========================================== */
-
-            .balance-account-row {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            /* ==========================================
-               TOTAL ROWS
-            ========================================== */
-
-            .balance-total {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            /* ==========================================
-               BALANCE CHECK
-            ========================================== */
-
+            .balance-account-row,
+            .balance-total,
             .balance-check {
               break-inside: avoid !important;
               page-break-inside: avoid !important;
-
-              margin-top: 10px !important;
             }
 
-            /* ==========================================
-               PRINT COLORS
-            ========================================== */
+            .balance-check {
+              margin-top: 10px !important;
+            }
 
             * {
               -webkit-print-color-adjust: exact !important;
@@ -347,58 +214,33 @@ export default function BalanceSheet() {
           className="balance-sheet-header"
           style={{
             display: "flex",
-            justifyContent:
-              "space-between",
+            justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 24,
           }}
         >
           <div>
-            <CompanyHeader
-              print={false}
-            />
+            <CompanyHeader print={false} />
 
-            <h1
-              style={{
-                margin: "5px 0",
-                fontSize: 26,
-              }}
-            >
+            <h1 style={{ margin: "5px 0", fontSize: 26 }}>
               📋 Balance Sheet
             </h1>
 
-            <p
-              style={{
-                margin: 0,
-                color: "#64748b",
-                fontSize: 13,
-              }}
-            >
-              Assets, liabilities and
-              capital position
+            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+              Assets, liabilities and capital position
             </p>
           </div>
 
-          {/* ==================================================
-              ACTION BUTTONS
-          ================================================== */}
-
+          {/* ACTION BUTTONS */}
           <div
             className="no-print"
-            style={{
-              display: "flex",
-              gap: 10,
-            }}
+            style={{ display: "flex", gap: 10 }}
           >
             <button
-              onClick={
-                loadBalanceSheet
-              }
+              onClick={loadBalanceSheet}
               style={{
-                padding:
-                  "10px 18px",
-                background:
-                  "#2563eb",
+                padding: "10px 18px",
+                background: "#2563eb",
                 color: "white",
                 border: "none",
                 borderRadius: 8,
@@ -410,14 +252,10 @@ export default function BalanceSheet() {
             </button>
 
             <button
-              onClick={() =>
-                window.print()
-              }
+              onClick={() => window.print()}
               style={{
-                padding:
-                  "10px 18px",
-                background:
-                  "#16a34a",
+                padding: "10px 18px",
+                background: "#16a34a",
                 color: "white",
                 border: "none",
                 borderRadius: 8,
@@ -431,7 +269,7 @@ export default function BalanceSheet() {
         </div>
 
         {/* ==================================================
-            LOADING
+            LOADING STATE OR CONTENT
         ================================================== */}
 
         {loading ? (
@@ -448,71 +286,56 @@ export default function BalanceSheet() {
           </div>
         ) : (
           <>
-            {/* ==================================================
-                SUMMARY CARDS
-            ================================================== */}
-
+            {/* SUMMARY CARDS */}
             <div
               className="balance-summary"
               style={{
                 display: "grid",
-                gridTemplateColumns:
-                  "repeat(3, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                 gap: 15,
                 marginBottom: 25,
               }}
             >
               <SummaryCard
                 title="🟢 Total Assets"
-                value={
-                  report.totalAssets
-                }
+                value={report.totalAssets}
                 background="#ecfdf5"
                 border="#a7f3d0"
+                formatter={money}
               />
 
               <SummaryCard
                 title="🔴 Total Liabilities"
-                value={
-                  report.totalLiabilities
-                }
+                value={report.totalLiabilities}
                 background="#fef2f2"
                 border="#fecaca"
+                formatter={money}
               />
 
               <SummaryCard
                 title="🔵 Total Capital"
-                value={
-                  report.totalCapital
-                }
+                value={report.totalCapital}
                 background="#eff6ff"
                 border="#bfdbfe"
+                formatter={money}
               />
             </div>
 
-            {/* ==================================================
-                ASSETS / LIABILITIES + CAPITAL
-            ================================================== */}
-
+            {/* ASSETS / LIABILITIES + CAPITAL */}
             <div
               className="balance-columns"
               style={{
                 display: "grid",
-                gridTemplateColumns:
-                  "repeat(2, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
                 gap: 20,
               }}
             >
-              {/* ==================================================
-                  ASSETS
-              ================================================== */}
-
+              {/* ASSETS */}
               <div
                 className="balance-card"
                 style={{
                   background: "white",
-                  border:
-                    "1px solid #d1fae5",
+                  border: "1px solid #d1fae5",
                   borderRadius: 10,
                   padding: 20,
                   overflow: "hidden",
@@ -521,8 +344,7 @@ export default function BalanceSheet() {
                 <div
                   style={{
                     display: "flex",
-                    justifyContent:
-                      "space-between",
+                    justifyContent: "space-between",
                     alignItems: "center",
                     marginBottom: 10,
                   }}
@@ -536,125 +358,77 @@ export default function BalanceSheet() {
                   >
                     🟢 Assets
                   </h2>
-
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "#64748b",
-                    }}
-                  >
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
                     Resources
                   </span>
                 </div>
 
-                {report.assets.length ===
-                0 ? (
+                {report.assets.length === 0 ? (
                   <div
                     style={{
-                      padding:
-                        "18px 0",
-                      color:
-                        "#64748b",
-                      textAlign:
-                        "center",
+                      padding: "18px 0",
+                      color: "#64748b",
+                      textAlign: "center",
                     }}
                   >
                     No assets found.
                   </div>
                 ) : (
-                  report.assets.map(
-                    (account) => (
-                      <div
-                        className="balance-account-row"
-                        key={account.id}
-                        style={{
-                          display:
-                            "flex",
-                          justifyContent:
-                            "space-between",
-                          padding:
-                            "10px 0",
-                          borderBottom:
-                            "1px solid #f1f5f9",
-                        }}
-                      >
-                        <span
-                          style={{
-                            color:
-                              "#334155",
-                          }}
-                        >
-                          {
-                            account.name
-                          }
-                        </span>
-
-                        <span
-                          style={{
-                            fontWeight: 600,
-                          }}
-                        >
-                          ₹{" "}
-                          {money(
-                            account.balance
-                          )}
-                        </span>
-                      </div>
-                    )
-                  )
+                  report.assets.map((account) => (
+                    <div
+                      className="balance-account-row"
+                      key={account.id || account.name}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "10px 0",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <span style={{ color: "#334155" }}>
+                        {account.name}
+                      </span>
+                      <span style={{ fontWeight: 600 }}>
+                        ₹ {money(account.balance)}
+                      </span>
+                    </div>
+                  ))
                 )}
 
                 <div
                   className="balance-total"
                   style={{
                     display: "flex",
-                    justifyContent:
-                      "space-between",
+                    justifyContent: "space-between",
                     marginTop: 15,
                     paddingTop: 12,
-                    borderTop:
-                      "2px solid #166534",
-                    fontWeight:
-                      "bold",
+                    borderTop: "2px solid #166534",
+                    fontWeight: "bold",
                     fontSize: 17,
                     color: "#166534",
                   }}
                 >
-                  <span>
-                    Total Assets
-                  </span>
-
-                  <span>
-                    ₹{" "}
-                    {money(
-                      report.totalAssets
-                    )}
-                  </span>
+                  <span>Total Assets</span>
+                  <span>₹ {money(report.totalAssets)}</span>
                 </div>
               </div>
 
-              {/* ==================================================
-                  LIABILITIES + CAPITAL
-              ================================================== */}
-
+              {/* LIABILITIES + CAPITAL */}
               <div
                 className="balance-card"
                 style={{
                   background: "white",
-                  border:
-                    "1px solid #e2e8f0",
+                  border: "1px solid #e2e8f0",
                   borderRadius: 10,
                   padding: 20,
                   overflow: "hidden",
                 }}
               >
-                {/* LIABILITIES */}
-
+                {/* LIABILITIES SECTION */}
                 <div
                   style={{
                     display: "flex",
-                    justifyContent:
-                      "space-between",
+                    justifyContent: "space-between",
                     alignItems: "center",
                     marginBottom: 10,
                   }}
@@ -668,119 +442,72 @@ export default function BalanceSheet() {
                   >
                     🔴 Liabilities
                   </h2>
-
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "#64748b",
-                    }}
-                  >
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
                     Obligations
                   </span>
                 </div>
 
-                {report.liabilities
-                  .length === 0 ? (
+                {report.liabilities.length === 0 ? (
                   <div
                     style={{
-                      padding:
-                        "18px 0",
-                      color:
-                        "#64748b",
-                      textAlign:
-                        "center",
+                      padding: "18px 0",
+                      color: "#64748b",
+                      textAlign: "center",
                     }}
                   >
-                    No liabilities
-                    found.
+                    No liabilities found.
                   </div>
                 ) : (
-                  report.liabilities.map(
-                    (account) => (
-                      <div
-                        className="balance-account-row"
-                        key={account.id}
-                        style={{
-                          display:
-                            "flex",
-                          justifyContent:
-                            "space-between",
-                          padding:
-                            "10px 0",
-                          borderBottom:
-                            "1px solid #f1f5f9",
-                        }}
-                      >
-                        <span
-                          style={{
-                            color:
-                              "#334155",
-                          }}
-                        >
-                          {
-                            account.name
-                          }
-                        </span>
-
-                        <span
-                          style={{
-                            fontWeight: 600,
-                          }}
-                        >
-                          ₹{" "}
-                          {money(
-                            account.balance
-                          )}
-                        </span>
-                      </div>
-                    )
-                  )
+                  report.liabilities.map((account) => (
+                    <div
+                      className="balance-account-row"
+                      key={account.id || account.name}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "10px 0",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <span style={{ color: "#334155" }}>
+                        {account.name}
+                      </span>
+                      <span style={{ fontWeight: 600 }}>
+                        ₹ {money(account.balance)}
+                      </span>
+                    </div>
+                  ))
                 )}
 
                 <div
                   className="balance-total"
                   style={{
                     display: "flex",
-                    justifyContent:
-                      "space-between",
+                    justifyContent: "space-between",
                     marginTop: 15,
                     paddingTop: 12,
-                    borderTop:
-                      "2px solid #b91c1c",
-                    fontWeight:
-                      "bold",
+                    borderTop: "2px solid #b91c1c",
+                    fontWeight: "bold",
                     color: "#b91c1c",
                   }}
                 >
-                  <span>
-                    Total Liabilities
-                  </span>
-
-                  <span>
-                    ₹{" "}
-                    {money(
-                      report.totalLiabilities
-                    )}
-                  </span>
+                  <span>Total Liabilities</span>
+                  <span>₹ {money(report.totalLiabilities)}</span>
                 </div>
 
-                {/* CAPITAL */}
-
+                {/* CAPITAL SECTION */}
                 <div
                   style={{
                     marginTop: 30,
                     paddingTop: 20,
-                    borderTop:
-                      "1px solid #e2e8f0",
+                    borderTop: "1px solid #e2e8f0",
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
-                      justifyContent:
-                        "space-between",
-                      alignItems:
-                        "center",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                       marginBottom: 10,
                     }}
                   >
@@ -788,197 +515,121 @@ export default function BalanceSheet() {
                       style={{
                         margin: 0,
                         fontSize: 19,
-                        color:
-                          "#1d4ed8",
+                        color: "#1d4ed8",
                       }}
                     >
                       🔵 Capital
                     </h2>
-
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color:
-                          "#64748b",
-                      }}
-                    >
+                    <span style={{ fontSize: 12, color: "#64748b" }}>
                       Owner's equity
                     </span>
                   </div>
 
-                  {report.capital
-                    .length === 0 ? (
+                  {report.capital.length === 0 ? (
                     <div
                       style={{
-                        padding:
-                          "18px 0",
-                        color:
-                          "#64748b",
-                        textAlign:
-                          "center",
+                        padding: "18px 0",
+                        color: "#64748b",
+                        textAlign: "center",
                       }}
                     >
-                      No capital
-                      accounts found.
+                      No capital accounts found.
                     </div>
                   ) : (
-                    report.capital.map(
-                      (account) => (
-                        <div
-                          className="balance-account-row"
-                          key={account.id}
-                          style={{
-                            display:
-                              "flex",
-                            justifyContent:
-                              "space-between",
-                            padding:
-                              "10px 0",
-                            borderBottom:
-                              "1px solid #f1f5f9",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color:
-                                "#334155",
-                            }}
-                          >
-                            {
-                              account.name
-                            }
-                          </span>
-
-                          <span
-                            style={{
-                              fontWeight: 600,
-                            }}
-                          >
-                            ₹{" "}
-                            {money(
-                              account.balance
-                            )}
-                          </span>
-                        </div>
-                      )
-                    )
+                    report.capital.map((account) => (
+                      <div
+                        className="balance-account-row"
+                        key={account.id || account.name}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          padding: "10px 0",
+                          borderBottom: "1px solid #f1f5f9",
+                        }}
+                      >
+                        <span style={{ color: "#334155" }}>
+                          {account.name}
+                        </span>
+                        <span style={{ fontWeight: 600 }}>
+                          ₹ {money(account.balance)}
+                        </span>
+                      </div>
+                    ))
                   )}
 
                   <div
                     className="balance-total"
                     style={{
-                      display:
-                        "flex",
-                      justifyContent:
-                        "space-between",
+                      display: "flex",
+                      justifyContent: "space-between",
                       marginTop: 15,
                       paddingTop: 12,
-                      borderTop:
-                        "2px solid #1d4ed8",
-                      fontWeight:
-                        "bold",
-                      color:
-                        "#1d4ed8",
+                      borderTop: "2px solid #1d4ed8",
+                      fontWeight: "bold",
+                      color: "#1d4ed8",
                     }}
                   >
-                    <span>
-                      Total Capital
-                    </span>
-
-                    <span>
-                      ₹{" "}
-                      {money(
-                        report.totalCapital
-                      )}
-                    </span>
+                    <span>Total Capital</span>
+                    <span>₹ {money(report.totalCapital)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ==================================================
-                BALANCE CHECK
-            ================================================== */}
-
+            {/* BALANCE CHECK FOOTER */}
             <div
               className="balance-check"
               style={{
                 marginTop: 25,
                 padding: 20,
                 borderRadius: 10,
-
-                background:
-                  isBalanced
-                    ? "#dcfce7"
-                    : "#fee2e2",
-
-                border:
-                  isBalanced
-                    ? "1px solid #86efac"
-                    : "1px solid #fecaca",
+                background: isBalanced ? "#dcfce7" : "#fee2e2",
+                border: isBalanced
+                  ? "1px solid #86efac"
+                  : "1px solid #fecaca",
               }}
             >
               <div
                 style={{
                   display: "flex",
-                  justifyContent:
-                    "space-between",
-                  alignItems:
-                    "center",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginBottom: 12,
                 }}
               >
-                <h2
-                  style={{
-                    margin: 0,
-                    fontSize: 18,
-                  }}
-                >
+                <h2 style={{ margin: 0, fontSize: 18 }}>
                   ⚖️ Balance Check
                 </h2>
-
                 <strong
                   style={{
-                    color:
-                      isBalanced
-                        ? "#166534"
-                        : "#991b1b",
+                    color: isBalanced ? "#166534" : "#991b1b",
                   }}
                 >
-                  {isBalanced
-                    ? "✅ BALANCED"
-                    : "⚠️ NOT BALANCED"}
+                  {isBalanced ? "✅ BALANCED" : "⚠️ NOT BALANCED"}
                 </strong>
               </div>
 
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns:
-                    "repeat(3, 1fr)",
+                  gridTemplateColumns: "repeat(3, 1fr)",
                   gap: 15,
                 }}
               >
                 <CheckValue
                   label="Total Assets"
-                  value={
-                    report.totalAssets
-                  }
+                  value={report.totalAssets}
+                  formatter={money}
                 />
-
                 <CheckValue
                   label="Liabilities + Capital"
-                  value={
-                    report.totalLiabilities +
-                    report.totalCapital
-                  }
+                  value={report.totalLiabilities + report.totalCapital}
+                  formatter={money}
                 />
-
                 <CheckValue
                   label="Difference"
-                  value={Math.abs(
-                    balanceDifference
-                  )}
+                  value={Math.abs(balanceDifference)}
+                  formatter={money}
                 />
               </div>
             </div>
@@ -990,96 +641,44 @@ export default function BalanceSheet() {
 }
 
 // ==================================================
-// SUMMARY CARD
+// SUB-COMPONENTS
 // ==================================================
 
-function SummaryCard({
-  title,
-  value,
-  background,
-  border,
-}) {
-  const money = (amount) =>
-    Number(amount || 0).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
-
+function SummaryCard({ title, value, background, border, formatter }) {
   return (
     <div
-      className="balance-card"
       style={{
-        padding: 18,
         background,
-        border:
-          `1px solid ${border}`,
+        border: `1px solid ${border}`,
         borderRadius: 10,
+        padding: 15,
       }}
     >
-      <div
-        style={{
-          fontSize: 13,
-          color: "#475569",
-          fontWeight: 600,
-        }}
-      >
+      <h2 style={{ margin: "0 0 5px 0", fontSize: 15, color: "#334155" }}>
         {title}
-      </div>
-
-      <h2
-        style={{
-          margin: "8px 0 0",
-          fontSize: 23,
-        }}
-      >
-        ₹ {money(value)}
       </h2>
+      <div style={{ fontSize: 20, fontWeight: "bold", color: "#0f172a" }}>
+        ₹ {formatter(value)}
+      </div>
     </div>
   );
 }
 
-// ==================================================
-// BALANCE CHECK VALUE
-// ==================================================
-
-function CheckValue({
-  label,
-  value,
-}) {
-  const money = (amount) =>
-    Number(amount || 0).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
-
+function CheckValue({ label, value, formatter }) {
   return (
     <div
       style={{
-        background:
-          "rgba(255,255,255,0.65)",
+        background: "rgba(255, 255, 255, 0.6)",
+        padding: 10,
         borderRadius: 8,
-        padding: 12,
       }}
     >
-      <div
-        style={{
-          fontSize: 12,
-          color: "#64748b",
-          marginBottom: 5,
-        }}
-      >
+      <div style={{ fontSize: 12, color: "#475569", marginBottom: 2 }}>
         {label}
       </div>
-
-      <strong>
-        ₹ {money(value)}
-      </strong>
+      <div style={{ fontWeight: "bold", fontSize: 15 }}>
+        ₹ {formatter(value)}
+      </div>
     </div>
   );
 }
