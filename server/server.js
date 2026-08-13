@@ -50,7 +50,7 @@ const voucherRoutes =
   require("./routes/Vouchers");
 
 const companyRoutes =
-  require("./routes/company");
+  require("./routes/Company");
 
    const { router: authRoutes } =
   require("./routes/auth");
