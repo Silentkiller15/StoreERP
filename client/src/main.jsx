@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import MainApp from './MainApp' // Changed from ./App to ./MainApp
+import App from './App' // 👈 Notice NO .jsx extension here!
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MainApp />
+    <App />
   </React.StrictMode>,
 )
 
