@@ -21,7 +21,7 @@ export default function CashBankBook() {
       setLoading(true);
 
       const accountsRes = await axios.get(
-        "http://localhost:5000/accounts"
+        "https://mudhikhana.onrender.com/accounts"
       );
 
       const allAccounts =
@@ -54,7 +54,7 @@ export default function CashBankBook() {
       for (const account of cashBankAccounts) {
         try {
           const res = await axios.get(
-            `http://localhost:5000/accounts/${account.id}/ledger`
+            `https://mudhikhana.onrender.com/accounts/${account.id}/ledger`
           );
 
           const accountData = res.data;

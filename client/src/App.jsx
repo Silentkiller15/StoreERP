@@ -61,7 +61,7 @@ import Settings from "./pages/Settings";
 // API
 // ==================================================
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://mudhikhana.onrender.com";
 
 
 // ==================================================

@@ -27,7 +27,7 @@ export default function Company() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/company"
+        "https://mudhikhana.onrender.com/company"
       );
 
       if (res.data) {
@@ -129,7 +129,7 @@ export default function Company() {
       setSaving(true);
 
       await axios.post(
-        "http://localhost:5000/company",
+        "https://mudhikhana.onrender.com/company",
         company
       );
 

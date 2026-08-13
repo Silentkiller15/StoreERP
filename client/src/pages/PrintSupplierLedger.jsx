@@ -31,7 +31,7 @@ export default function PrintSupplierLedger() {
   const loadCompany = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/company"
+        "https://mudhikhana.onrender.com/company"
       );
 
       if (res.data) {
@@ -61,7 +61,7 @@ export default function PrintSupplierLedger() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/suppliers"
+        "https://mudhikhana.onrender.com/suppliers"
       );
 
       setSuppliers(res.data || []);
@@ -96,7 +96,7 @@ export default function PrintSupplierLedger() {
       setLoadingStatement(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/outstanding"
+        "https://mudhikhana.onrender.com/accounts/outstanding"
       );
 
       const payables =

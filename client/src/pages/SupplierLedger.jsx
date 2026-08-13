@@ -20,7 +20,7 @@ export default function SupplierLedger() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/suppliers"
+        "https://mudhikhana.onrender.com/suppliers"
       );
 
       setSuppliers(res.data || []);
@@ -55,7 +55,7 @@ export default function SupplierLedger() {
       setLoadingStatement(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/outstanding"
+        "https://mudhikhana.onrender.com/accounts/outstanding"
       );
 
       const payables =

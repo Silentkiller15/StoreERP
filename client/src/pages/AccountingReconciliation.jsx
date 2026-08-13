@@ -20,15 +20,15 @@ export default function AccountingReconciliation() {
         allocationRes,
       ] = await Promise.all([
         axios.get(
-          "http://localhost:5000/sales"
+          "https://mudhikhana.onrender.com/sales"
         ),
 
         axios.get(
-          "http://localhost:5000/purchases"
+          "https://mudhikhana.onrender.com/purchases"
         ),
 
         axios.get(
-          "http://localhost:5000/accounts/allocation-data"
+          "https://mudhikhana.onrender.com/accounts/allocation-data"
         ),
       ]);
 

@@ -16,7 +16,7 @@ export default function Outstanding() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/outstanding"
+        "https://mudhikhana.onrender.com/accounts/outstanding"
       );
 
       setReport({

@@ -81,7 +81,7 @@ export default function Sales({
   const loadCustomers = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/customers"
+        "https://mudhikhana.onrender.com/customers"
       );
 
       setCustomers(res.data || []);
@@ -100,7 +100,7 @@ export default function Sales({
   const loadProducts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/products"
+        "https://mudhikhana.onrender.com/products"
       );
 
       setProducts(res.data || []);
@@ -122,7 +122,7 @@ export default function Sales({
       setError("");
 
       const res = await axios.get(
-        `http://localhost:5000/sales/${id}`
+        `https://mudhikhana.onrender.com/sales/${id}`
       );
 
       const sale = res.data;
@@ -464,7 +464,7 @@ export default function Sales({
 
       if (editingSaleId) {
         await axios.put(
-          `http://localhost:5000/sales/${editingSaleId}`,
+          `https://mudhikhana.onrender.com/sales/${editingSaleId}`,
           saleData
         );
 
@@ -481,7 +481,7 @@ export default function Sales({
 
       else {
         await axios.post(
-          "http://localhost:5000/sales",
+          "https://mudhikhana.onrender.com/sales",
           saleData
         );
 

@@ -28,7 +28,7 @@ export default function BalanceSheet() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/balance-sheet"
+        "https://mudhikhana.onrender.com/accounts/balance-sheet"
       );
 
       setReport({

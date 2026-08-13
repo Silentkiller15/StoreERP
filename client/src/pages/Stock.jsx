@@ -45,7 +45,7 @@ export default function Stock() {
   const loadProducts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/products"
+        "https://mudhikhana.onrender.com/products"
       );
 
       setProducts(res.data || []);
@@ -328,7 +328,7 @@ export default function Stock() {
         );
 
       await axios.post(
-        "http://localhost:5000/products/stock-adjustment",
+        "https://mudhikhana.onrender.com/products/stock-adjustment",
         {
           items,
         }

@@ -16,11 +16,11 @@ export default function PrintInvoice() {
       const loadInvoice = async () => {
   try {
     const saleRes = await axios.get(
-      `http://localhost:5000/sales/${id}`
+      `https://mudhikhana.onrender.com/sales/${id}`
     );
 
     const companyRes = await axios.get(
-      "http://localhost:5000/company"
+      "https://mudhikhana.onrender.com/company"
     );
 
     setSale(saleRes.data);

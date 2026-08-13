@@ -63,7 +63,7 @@ export default function Purchases({
   const loadSuppliers = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/suppliers"
+        "https://mudhikhana.onrender.com/suppliers"
       );
 
       setSuppliers(res.data || []);
@@ -78,7 +78,7 @@ export default function Purchases({
   const loadProducts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/products"
+        "https://mudhikhana.onrender.com/products"
       );
 
       setProducts(res.data || []);
@@ -97,7 +97,7 @@ export default function Purchases({
   const loadPurchase = async (id) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/purchases/${id}`
+        `https://mudhikhana.onrender.com/purchases/${id}`
       );
 
       const purchase =
@@ -418,7 +418,7 @@ export default function Purchases({
           editingPurchaseId
         ) {
           await axios.put(
-            `http://localhost:5000/purchases/${editingPurchaseId}`,
+            `https://mudhikhana.onrender.com/purchases/${editingPurchaseId}`,
             {
               purchaseNo,
 
@@ -454,7 +454,7 @@ export default function Purchases({
 
         else {
           await axios.post(
-            "http://localhost:5000/purchases",
+            "https://mudhikhana.onrender.com/purchases",
             {
               purchaseNo,
 

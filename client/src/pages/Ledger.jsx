@@ -20,7 +20,7 @@ export default function Ledger() {
   const loadAccounts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/accounts"
+        "https://mudhikhana.onrender.com/accounts"
       );
 
       setAccounts(res.data || []);
@@ -44,7 +44,7 @@ export default function Ledger() {
       setLoading(true);
 
       const res = await axios.get(
-        `http://localhost:5000/accounts/${accountId}/ledger`
+        `https://mudhikhana.onrender.com/accounts/${accountId}/ledger`
       );
 
       setAccount(res.data.account);

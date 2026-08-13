@@ -25,7 +25,7 @@ export default function VoucherDetail() {
 
       const accountsRes =
         await axios.get(
-          "http://localhost:5000/accounts"
+          "https://mudhikhana.onrender.com/accounts"
         );
 
       const accountList =
@@ -39,7 +39,7 @@ export default function VoucherDetail() {
         try {
           const ledgerRes =
             await axios.get(
-              `http://localhost:5000/accounts/${account.id}/ledger`
+              `https://mudhikhana.onrender.com/accounts/${account.id}/ledger`
             );
 
           const ledger =

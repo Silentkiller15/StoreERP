@@ -38,7 +38,7 @@ export default function Accounts() {
   const loadAccounts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/accounts"
+        "https://mudhikhana.onrender.com/accounts"
       );
 
       setAccounts(res.data || []);
@@ -55,7 +55,7 @@ export default function Accounts() {
   const loadGroups = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/accounts/groups"
+        "https://mudhikhana.onrender.com/accounts/groups"
       );
 
       setGroups(res.data || []);
@@ -107,7 +107,7 @@ export default function Accounts() {
     try {
       if (editingId) {
         await axios.put(
-          `http://localhost:5000/accounts/${editingId}`,
+          `https://mudhikhana.onrender.com/accounts/${editingId}`,
           data
         );
 
@@ -116,7 +116,7 @@ export default function Accounts() {
         );
       } else {
         await axios.post(
-          "http://localhost:5000/accounts",
+          "https://mudhikhana.onrender.com/accounts",
           data
         );
 
@@ -182,7 +182,7 @@ export default function Accounts() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/accounts/${id}`
+        `https://mudhikhana.onrender.com/accounts/${id}`
       );
 
       alert(

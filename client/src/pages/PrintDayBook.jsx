@@ -22,7 +22,7 @@ export default function PrintDayBook() {
 
       const accountsRes =
         await axios.get(
-          "http://localhost:5000/accounts"
+          "https://mudhikhana.onrender.com/accounts"
         );
 
       const accounts =
@@ -34,7 +34,7 @@ export default function PrintDayBook() {
         try {
           const ledgerRes =
             await axios.get(
-              `http://localhost:5000/accounts/${account.id}/ledger`
+              `https://mudhikhana.onrender.com/accounts/${account.id}/ledger`
             );
 
           const ledger =

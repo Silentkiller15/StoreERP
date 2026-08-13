@@ -19,7 +19,7 @@ export default function SalesReport() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/sales/report/all"
+        "https://mudhikhana.onrender.com/sales/report/all"
       );
 
       setSales(res.data || []);

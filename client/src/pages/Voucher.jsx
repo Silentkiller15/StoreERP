@@ -41,7 +41,7 @@ export default function Voucher() {
   const loadAccounts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/accounts"
+        "https://mudhikhana.onrender.com/accounts"
       );
 
       setAccounts(res.data || []);
@@ -60,7 +60,7 @@ export default function Voucher() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/vouchers"
+        "https://mudhikhana.onrender.com/vouchers"
       );
 
       setVouchers(res.data || []);
@@ -168,7 +168,7 @@ export default function Voucher() {
     try {
       if (editingId) {
         await axios.put(
-          `http://localhost:5000/vouchers/${editingId}`,
+          `https://mudhikhana.onrender.com/vouchers/${editingId}`,
           data
         );
 
@@ -177,7 +177,7 @@ export default function Voucher() {
         );
       } else {
         await axios.post(
-          "http://localhost:5000/vouchers",
+          "https://mudhikhana.onrender.com/vouchers",
           data
         );
 
@@ -208,7 +208,7 @@ export default function Voucher() {
   const editVoucher = async (id) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/vouchers/${id}`
+        `https://mudhikhana.onrender.com/vouchers/${id}`
       );
 
       const v = res.data;
@@ -270,7 +270,7 @@ export default function Voucher() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/vouchers/${id}`
+        `https://mudhikhana.onrender.com/vouchers/${id}`
       );
 
       alert(

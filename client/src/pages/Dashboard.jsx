@@ -68,37 +68,37 @@ export default function Dashboard() {
         balanceRes,
       ] = await Promise.all([
         axios.get(
-          "http://localhost:5000/products",
+          "https://mudhikhana.onrender.com/products",
           config
         ),
 
         axios.get(
-          "http://localhost:5000/customers",
+          "https://mudhikhana.onrender.com/customers",
           config
         ),
 
         axios.get(
-          "http://localhost:5000/suppliers",
+          "https://mudhikhana.onrender.com/suppliers",
           config
         ),
 
         axios.get(
-          "http://localhost:5000/sales",
+          "https://mudhikhana.onrender.com/sales",
           config
         ),
 
         axios.get(
-          "http://localhost:5000/purchases",
+          "https://mudhikhana.onrender.com/purchases",
           config
         ),
 
         axios.get(
-          "http://localhost:5000/accounts/outstanding",
+          "https://mudhikhana.onrender.com/accounts/outstanding",
           config
         ),
 
         axios.get(
-          "http://localhost:5000/accounts/balance-sheet",
+          "https://mudhikhana.onrender.com/accounts/balance-sheet",
           config
         ),
       ]);

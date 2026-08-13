@@ -11,7 +11,7 @@ export default function Invoice({ saleId }) {
   const loadInvoice = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/sales/${saleId}`
+        `https://mudhikhana.onrender.com/sales/${saleId}`
       );
       setSale(res.data);
     } catch (err) {

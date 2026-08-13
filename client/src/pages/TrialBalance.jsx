@@ -23,7 +23,7 @@ export default function TrialBalance() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/trial-balance"
+        "https://mudhikhana.onrender.com/accounts/trial-balance"
       );
 
       setReport({

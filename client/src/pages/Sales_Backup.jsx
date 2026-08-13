@@ -24,7 +24,7 @@ export default function Sales() {
 
   const loadCustomers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/customers");
+      const res = await axios.get("https://mudhikhana.onrender.com/customers");
       setCustomers(res.data);
     } catch (err) {
       console.log(err);
@@ -33,7 +33,7 @@ export default function Sales() {
 
   const loadProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/products");
+      const res = await axios.get("https://mudhikhana.onrender.com/products");
       setProducts(res.data);
     } catch (err) {
       console.log(err);
@@ -95,7 +95,7 @@ export default function Sales() {
 
   const saveSale = async () => {
     try {
-      await axios.post("http://localhost:5000/sales", {
+      await axios.post("https://mudhikhana.onrender.com/sales", {
         saleNo,
         customerId,
         saleDate,

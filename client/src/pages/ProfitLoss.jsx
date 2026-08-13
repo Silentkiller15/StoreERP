@@ -32,7 +32,7 @@ export default function ProfitLoss() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/sales/profit-loss"
+        "https://mudhikhana.onrender.com/sales/profit-loss"
       );
 
       const data = res.data || {};

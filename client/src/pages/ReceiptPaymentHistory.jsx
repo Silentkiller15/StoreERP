@@ -21,7 +21,7 @@ export default function ReceiptPaymentHistory() {
 
       const accountsRes =
         await axios.get(
-          "http://localhost:5000/accounts"
+          "https://mudhikhana.onrender.com/accounts"
         );
 
       const accounts =
@@ -37,7 +37,7 @@ export default function ReceiptPaymentHistory() {
         try {
           const ledgerRes =
             await axios.get(
-              `http://localhost:5000/accounts/${account.id}/ledger`
+              `https://mudhikhana.onrender.com/accounts/${account.id}/ledger`
             );
 
           const ledgerData =

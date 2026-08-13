@@ -46,7 +46,7 @@ export default function Customers() {
     try {
       const res =
         await axios.get(
-          "http://localhost:5000/customers"
+          "https://mudhikhana.onrender.com/customers"
         );
 
       setCustomers(
@@ -118,7 +118,7 @@ export default function Customers() {
 
         if (editId) {
           await axios.put(
-            `http://localhost:5000/customers/${editId}`,
+            `https://mudhikhana.onrender.com/customers/${editId}`,
             customer
           );
 
@@ -127,7 +127,7 @@ export default function Customers() {
           );
         } else {
           await axios.post(
-            "http://localhost:5000/customers",
+            "https://mudhikhana.onrender.com/customers",
             customer
           );
 
@@ -202,7 +202,7 @@ export default function Customers() {
 
       try {
         await axios.delete(
-          `http://localhost:5000/customers/${id}`
+          `https://mudhikhana.onrender.com/customers/${id}`
         );
 
         alert(

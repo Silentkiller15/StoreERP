@@ -46,7 +46,7 @@ export default function Suppliers() {
     try {
       const res =
         await axios.get(
-          "http://localhost:5000/suppliers"
+          "https://mudhikhana.onrender.com/suppliers"
         );
 
       setSuppliers(
@@ -118,7 +118,7 @@ export default function Suppliers() {
 
         if (editId) {
           await axios.put(
-            `http://localhost:5000/suppliers/${editId}`,
+            `https://mudhikhana.onrender.com/suppliers/${editId}`,
             supplier
           );
 
@@ -127,7 +127,7 @@ export default function Suppliers() {
           );
         } else {
           await axios.post(
-            "http://localhost:5000/suppliers",
+            "https://mudhikhana.onrender.com/suppliers",
             supplier
           );
 
@@ -202,7 +202,7 @@ export default function Suppliers() {
 
       try {
         await axios.delete(
-          `http://localhost:5000/suppliers/${id}`
+          `https://mudhikhana.onrender.com/suppliers/${id}`
         );
 
         alert(

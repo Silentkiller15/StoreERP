@@ -21,7 +21,7 @@ export default function SupplierOutstanding() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/outstanding"
+        "https://mudhikhana.onrender.com/accounts/outstanding"
       );
 
       const payables =

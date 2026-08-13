@@ -43,7 +43,7 @@ export default function PurchaseRegister({
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/purchases"
+        "https://mudhikhana.onrender.com/purchases"
       );
 
       setPurchases(
@@ -144,7 +144,7 @@ export default function PurchaseRegister({
           selectedPurchases.map(
             (id) =>
               axios.delete(
-                `http://localhost:5000/purchases/${id}`
+                `https://mudhikhana.onrender.com/purchases/${id}`
               )
           )
         );
@@ -192,7 +192,7 @@ export default function PurchaseRegister({
       try {
         const res =
           await axios.get(
-            `http://localhost:5000/purchases/${id}`
+            `https://mudhikhana.onrender.com/purchases/${id}`
           );
 
         const purchase =

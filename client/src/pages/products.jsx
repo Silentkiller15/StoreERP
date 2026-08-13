@@ -47,7 +47,7 @@ export default function Products() {
     try {
       const res =
         await axios.get(
-          "http://localhost:5000/products"
+          "https://mudhikhana.onrender.com/products"
         );
 
       setProducts(
@@ -118,7 +118,7 @@ export default function Products() {
 
         if (editId) {
           await axios.put(
-            `http://localhost:5000/products/${editId}`,
+            `https://mudhikhana.onrender.com/products/${editId}`,
             product
           );
 
@@ -127,7 +127,7 @@ export default function Products() {
           );
         } else {
           await axios.post(
-            "http://localhost:5000/products",
+            "https://mudhikhana.onrender.com/products",
             product
           );
 
@@ -202,7 +202,7 @@ export default function Products() {
 
       try {
         await axios.delete(
-          `http://localhost:5000/products/${id}`
+          `https://mudhikhana.onrender.com/products/${id}`
         );
 
         alert(

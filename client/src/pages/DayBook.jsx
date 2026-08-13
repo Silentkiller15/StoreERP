@@ -34,7 +34,7 @@ const [toDate, setToDate] =
     }
 
     const res = await axios.get(
-      "http://localhost:5000/accounts/day-book",
+      "https://mudhikhana.onrender.com/accounts/day-book",
       {
         params,
       }

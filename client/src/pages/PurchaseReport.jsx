@@ -21,7 +21,7 @@ export default function PurchaseReport() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/purchases/report/all"
+        "https://mudhikhana.onrender.com/purchases/report/all"
       );
 
       setPurchases(res.data || []);

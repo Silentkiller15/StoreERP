@@ -37,7 +37,7 @@ export default function PrintCustomerLedger() {
   const loadCompany = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/company"
+        "https://mudhikhana.onrender.com/company"
       );
 
       if (res.data) {
@@ -67,7 +67,7 @@ export default function PrintCustomerLedger() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/customers"
+        "https://mudhikhana.onrender.com/customers"
       );
 
       setCustomers(
@@ -104,7 +104,7 @@ export default function PrintCustomerLedger() {
       setLoadingStatement(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/outstanding"
+        "https://mudhikhana.onrender.com/accounts/outstanding"
       );
 
       const receivables =

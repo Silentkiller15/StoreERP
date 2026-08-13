@@ -57,7 +57,7 @@ export default function PaymentAllocation() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/allocation-data",
+        "https://mudhikhana.onrender.com/accounts/allocation-data",
         getAuthConfig()
       );
 
@@ -256,7 +256,7 @@ export default function PaymentAllocation() {
       setSaving(true);
 
       await axios.post(
-        "http://localhost:5000/accounts/allocate",
+        "https://mudhikhana.onrender.com/accounts/allocate",
         {
           voucherId:
             Number(voucherId),

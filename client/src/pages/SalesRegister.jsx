@@ -133,7 +133,7 @@ export default function SalesRegister({
     try {
       const res =
         await axios.get(
-          "http://localhost:5000/sales"
+          "https://mudhikhana.onrender.com/sales"
         );
 
       setSales(res.data || []);
@@ -215,7 +215,7 @@ export default function SalesRegister({
           selectedSales.map(
             (id) =>
               axios.delete(
-                `http://localhost:5000/sales/${id}`
+                `https://mudhikhana.onrender.com/sales/${id}`
               )
           )
         );
@@ -317,7 +317,7 @@ export default function SalesRegister({
     try {
       const res =
         await axios.get(
-          `http://localhost:5000/sales/${sale.id}`
+          `https://mudhikhana.onrender.com/sales/${sale.id}`
         );
 
       const invoice =
@@ -325,7 +325,7 @@ export default function SalesRegister({
 
       const companyRes =
         await axios.get(
-          "http://localhost:5000/company"
+          "https://mudhikhana.onrender.com/company"
         );
 
       const company =

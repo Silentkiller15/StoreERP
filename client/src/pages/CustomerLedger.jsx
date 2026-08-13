@@ -33,7 +33,7 @@ export default function CustomerLedger() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/customers"
+        "https://mudhikhana.onrender.com/customers"
       );
 
       setCustomers(
@@ -70,7 +70,7 @@ export default function CustomerLedger() {
       setLoadingStatement(true);
 
       const res = await axios.get(
-        "http://localhost:5000/accounts/outstanding"
+        "https://mudhikhana.onrender.com/accounts/outstanding"
       );
 
       const receivables =

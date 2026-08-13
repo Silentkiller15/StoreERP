@@ -27,7 +27,7 @@ export default function MainLayout({
   const loadCompanyName = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/company"
+        "https://mudhikhana.onrender.com/company"
       );
 
       if (res.data?.name) {

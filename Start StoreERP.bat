@@ -16,7 +16,7 @@ start "StoreERP Frontend" cmd /k "cd /d %~dp0client && npm run dev"
 
 echo.
 echo StoreERP is starting.
-echo Backend:  http://localhost:5000
+echo Backend:  https://mudhikhana.onrender.com
 echo Frontend: check the Vite window for the local URL.
 echo.
 pause

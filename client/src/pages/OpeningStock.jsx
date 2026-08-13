@@ -44,7 +44,7 @@ export default function OpeningStock() {
     try {
       const res =
         await axios.get(
-          "http://localhost:5000/products"
+          "https://mudhikhana.onrender.com/products"
         );
 
       setProducts(
@@ -76,7 +76,7 @@ export default function OpeningStock() {
 
         const res =
           await axios.get(
-            "http://localhost:5000/opening-stock"
+            "https://mudhikhana.onrender.com/opening-stock"
           );
 
         setEntries(
@@ -346,7 +346,7 @@ export default function OpeningStock() {
         setLoading(true);
 
         await axios.post(
-          "http://localhost:5000/opening-stock",
+          "https://mudhikhana.onrender.com/opening-stock",
           {
             openingDate,
 
@@ -424,7 +424,7 @@ export default function OpeningStock() {
       try {
 
         await axios.delete(
-          `http://localhost:5000/opening-stock/${id}`
+          `https://mudhikhana.onrender.com/opening-stock/${id}`
         );
 
         alert(

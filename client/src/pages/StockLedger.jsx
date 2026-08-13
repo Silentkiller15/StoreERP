@@ -25,7 +25,7 @@ export default function StockLedger() {
   const loadProducts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/products"
+        "https://mudhikhana.onrender.com/products"
       );
 
       setProducts(res.data);
@@ -59,7 +59,7 @@ export default function StockLedger() {
       }
 
       const res = await axios.get(
-        "http://localhost:5000/products/stock-ledger",
+        "https://mudhikhana.onrender.com/products/stock-ledger",
         {
           params,
         }
@@ -106,7 +106,7 @@ export default function StockLedger() {
       setCreatingOpening(true);
 
       const res = await axios.post(
-        "http://localhost:5000/products/create-opening-stock",
+        "https://mudhikhana.onrender.com/products/create-opening-stock",
         {
           date:
             new Date()
