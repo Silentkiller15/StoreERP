@@ -46,8 +46,8 @@ const purchaseRoutes =
 const salesRoutes =
   require("./routes/sales");
 
-const voucherRoutes =
-  require("./routes/vouchers");
+const voucherRoutes = 
+  require("./routes/Vouchers");
 
 const companyRoutes =
   require("./routes/company");
